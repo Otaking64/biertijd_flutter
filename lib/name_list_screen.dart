@@ -61,8 +61,6 @@ class _NameListPageState extends State<NameListPage> {
 
   @override
   Widget build(BuildContext context) {
-    alignment:
-    Alignment.topCenter;
     return Stack(
       children: [
         Scaffold(
@@ -146,14 +144,12 @@ class _NameListPageState extends State<NameListPage> {
           ),
         ConfettiWidget(
           confettiController: _confettiController,
-          blastDirectionality:
-              BlastDirectionality.explosive, // Blast in all directions
-          shouldLoop: false, // Do not loop
-          numberOfParticles: 30, // More particles
-          gravity: 0.3, // Make them fall a bit slower
-          emissionFrequency: 0.05, // How often particles are emitted
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          numberOfParticles: 50,
+          gravity: 0.3,
+          emissionFrequency: 0.1, // How often particles are emitted
           colors: const [
-            // Fun colors
             Colors.green,
             Colors.blue,
             Colors.pink,
@@ -165,7 +161,6 @@ class _NameListPageState extends State<NameListPage> {
     );
   }
 
-  // (The _showAddNameDialog method remains the same as before)
   Future<void> _showAddNameDialog() async {
     final TextEditingController nameController = TextEditingController();
     final String? newName = await showDialog<String>(
