@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'name_list_screen.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -29,16 +31,29 @@ final ThemeData darkTheme = ThemeData(
 );
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Wie moet er bier gaan halen?',
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      title: 'Name App',
+      // Using the themes we defined earlier
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFBC02D),
+          brightness: Brightness.light,
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFBC02D),
+          brightness: Brightness.dark,
+        ),
+      ),
       themeMode: ThemeMode.system,
-      home: const MainPage(title: 'Wie moet er bier gaan halen?'),
+      home: const NameListPage(),
     );
   }
 }
