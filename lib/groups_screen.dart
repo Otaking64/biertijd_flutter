@@ -1,9 +1,18 @@
-
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:wie_moet_er_bier_gaan_halen/qr_scanner_screen.dart';
+
+// A simple data model for a group
+class Group {
+  final String id;
+  final String name;
+  final int lastUpdated;
+
+  Group({required this.id, required this.name, required this.lastUpdated});
+}
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -66,7 +75,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
       'createdBy': user.uid,
       'members': {
         user.uid: true,
-      }
+      },
+      'lastUpdated': ServerValue.timestamp, // Add timestamp on creation
     });
 
     // Also add the group to the user's list of groups
@@ -86,11 +96,50 @@ class _GroupsScreenState extends State<GroupsScreen> {
         .onValue;
   }
 
+  // New method to fetch all group details and sort them
+  Future<List<Group>> _fetchAndSortGroups(List<dynamic> groupIds) async {
+    List<Future<Group?>> futures = groupIds.map((groupId) async {
+      final groupSnapshot = await FirebaseDatabase.instance.ref('groups/$groupId').get();
+      if (groupSnapshot.exists) {
+        final groupData = groupSnapshot.value as Map<dynamic, dynamic>;
+        return Group(
+          id: groupId,
+          name: groupData['name'] ?? 'Unnamed Group',
+          lastUpdated: groupData['lastUpdated'] as int? ?? 0,
+        );
+      }
+      return null;
+    }).toList();
+
+    final results = await Future.wait(futures);
+    final groups = results.where((g) => g != null).cast<Group>().toList();
+
+    // Sort the groups by lastUpdated, descending (most recent first)
+    groups.sort((a, b) => b.lastUpdated.compareTo(a.lastUpdated));
+
+    return groups;
+  }
+
+  void _navigateToScanner() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const QrScannerScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Groups'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _navigateToScanner,
+            tooltip: 'Join Group via QR',
+          ),
+        ],
       ),
       body: StreamBuilder<DatabaseEvent>(
         stream: _getGroupsStream(),
@@ -99,6 +148,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+            // Show only the local group if there are no online groups
             return _buildGroupList(const []);
           }
 
@@ -106,7 +156,19 @@ class _GroupsScreenState extends State<GroupsScreen> {
               snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
           final groupIds = groupsData.keys.toList();
 
-          return _buildGroupList(groupIds);
+          // Use a FutureBuilder to fetch, sort, and then build the list
+          return FutureBuilder<List<Group>>(
+            future: _fetchAndSortGroups(groupIds),
+            builder: (context, groupSnapshot) {
+              if (groupSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!groupSnapshot.hasData || groupSnapshot.data!.isEmpty) {
+                return _buildGroupList(const []);
+              }
+              return _buildGroupList(groupSnapshot.data!);
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -116,9 +178,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
     );
   }
 
-  Widget _buildGroupList(List<dynamic> groupIds) {
+  Widget _buildGroupList(List<Group> sortedGroups) {
     return ListView.builder(
-      itemCount: groupIds.length + 1, // +1 for the local group
+      itemCount: sortedGroups.length + 1, // +1 for the local group
       itemBuilder: (context, index) {
         if (index == 0) {
           // The first item is always the local group
@@ -127,46 +189,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
               leading: const Icon(Icons.phone_android),
               title: const Text('Local Group (On this device)'),
               onTap: () {
-                // Pop with null to signify local group
                 Navigator.of(context).pop(null);
               },
             ),
           );
         }
-        final groupId = groupIds[index - 1];
-        return GroupListTile(groupId: groupId);
-      },
-    );
-  }
-}
-
-// Helper widget to fetch and display details for a single group
-class GroupListTile extends StatelessWidget {
-  final String groupId;
-
-  const GroupListTile({super.key, required this.groupId});
-
-  @override
-  Widget build(BuildContext context) {
-    final groupRef = FirebaseDatabase.instance.ref('groups/$groupId');
-
-    return StreamBuilder<DatabaseEvent>(
-      stream: groupRef.onValue,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return const SizedBox.shrink(); // Don't show if group data is missing
-        }
-
-        final groupData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-        final groupName = groupData['name'] ?? 'Unnamed Group';
-
+        final group = sortedGroups[index - 1];
         return Card(
           child: ListTile(
             leading: const Icon(Icons.group),
-            title: Text(groupName),
+            title: Text(group.name),
             onTap: () {
-              // Pop with the groupId to signify which group was selected
-              Navigator.of(context).pop(groupId);
+              Navigator.of(context).pop(group.id);
             },
           ),
         );

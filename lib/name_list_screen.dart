@@ -79,6 +79,10 @@ class _NameListScreenState extends State<NameListScreen> {
   bool _isShowingResult = false;
   Person? _selectedPerson;
   String? _selectedOnlineUserName;
+  Map<Drink, int> _drinkSummary = {};
+
+  Person? _lastSelectedLocalPerson;
+  String? _lastSelectedOnlineUid;
 
   late ConfettiController _confettiController;
   final User? _currentUser = FirebaseAuth.instance.currentUser;
@@ -130,65 +134,126 @@ class _NameListScreenState extends State<NameListScreen> {
     _loadLocalGroup();
   }
 
-  void _pickRandomName() {
+  Future<List<Person>> _fetchOnlineMemberDetails(Map<dynamic, dynamic> membersData) async {
+    List<Person> onlineMembers = [];
+    for (var entry in membersData.entries) {
+      final uid = entry.key;
+      final memberInfo = entry.value;
+
+      int numberOfRounds = 0;
+      // Backwards compatibility: memberInfo could be `true` or a map `{ 'numberOfRounds': x }`
+      if (memberInfo is Map && memberInfo.containsKey('numberOfRounds')) {
+        numberOfRounds = memberInfo['numberOfRounds'] as int;
+      }
+
+      final userSnapshot = await FirebaseDatabase.instance.ref('users/$uid').get();
+      if (userSnapshot.exists && userSnapshot.value != null) {
+        final userData = userSnapshot.value as Map<dynamic, dynamic>;
+        final firstName = userData['firstName'] ?? 'Unknown';
+        final lastNameInitial = userData['lastNameInitial'] ?? '';
+
+        final preferredDrink = Drink.values.firstWhere(
+              (e) => e.toString() == userData['preferredDrink'],
+          orElse: () => Drink.beer,
+        );
+
+        onlineMembers.add(Person(
+          uid: uid,
+          name: '$firstName ${lastNameInitial.isNotEmpty ? '$lastNameInitial.' : ''}'.trim(),
+          numberOfRounds: numberOfRounds, // Group-specific rounds
+          preferredDrink: preferredDrink,
+        ));
+      }
+    }
+    return onlineMembers;
+  }
+
+  void _pickRandomName() async {
     if (_activeGroupId == null) {
-      // Local group logic
+      // --- Local Group: Fair Selection Logic ---
       if (_localGroupMembers.isEmpty) {
         _showErrorSnackbar('Voeg eerst wat namen toe.');
         return;
       }
+
+      final summary = <Drink, int>{};
+      for (final person in _localGroupMembers) {
+        summary[person.preferredDrink] = (summary[person.preferredDrink] ?? 0) + 1;
+      }
+
+      final minRounds = _localGroupMembers.map((p) => p.numberOfRounds).reduce(min);
+      var eligiblePeople = _localGroupMembers.where((p) => p.numberOfRounds == minRounds).toList();
+      if (eligiblePeople.length > 1 && _lastSelectedLocalPerson != null) {
+        eligiblePeople.removeWhere((p) => p.name == _lastSelectedLocalPerson!.name);
+      }
+
       final random = Random();
-      final index = random.nextInt(_localGroupMembers.length);
-      final selectedPerson = _localGroupMembers[index];
+      final selectedPerson = eligiblePeople[random.nextInt(eligiblePeople.length)];
 
       setState(() {
         selectedPerson.numberOfRounds++;
         _selectedPerson = selectedPerson;
+        _lastSelectedLocalPerson = selectedPerson;
         _selectedOnlineUserName = null;
         _isShowingResult = true;
+        _drinkSummary = summary;
       });
       _saveLocalGroup();
       _confettiController.play();
+
     } else {
-      // Online group logic
+      // --- Online Group: Group-Specific Fair Selection Logic ---
       final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
-      membersRef.once().then((snapshot) {
-        if (!snapshot.snapshot.exists || snapshot.snapshot.value == null) {
-          _showErrorSnackbar('This group has no members.');
-          return;
-        }
-        final members = (snapshot.snapshot.value as Map<dynamic, dynamic>).keys.toList();
-        final random = Random();
-        final selectedUid = members[random.nextInt(members.length)];
+      final snapshot = await membersRef.get();
 
-        final userRef = FirebaseDatabase.instance.ref('users/$selectedUid');
-        userRef.once().then((userSnapshot) {
-          String displayName = 'Unknown User';
-          if (userSnapshot.snapshot.exists && userSnapshot.snapshot.value != null) {
-            final userData = userSnapshot.snapshot.value as Map<dynamic, dynamic>;
-            final firstName = userData['firstName'] ?? 'Unknown';
-            final lastNameInitial = userData['lastNameInitial'] ?? '';
-            displayName = '$firstName ${lastNameInitial.isNotEmpty ? lastNameInitial + "." : ""}'.trim();
+      if (!snapshot.exists || snapshot.value == null) {
+        _showErrorSnackbar('This group has no members.');
+        return;
+      }
 
-            // Increment the round count
-            final currentRounds = userData['numberOfRounds'] as int? ?? 0;
-            userRef.update({'numberOfRounds': currentRounds + 1});
-          }
+      final membersData = snapshot.value as Map<dynamic, dynamic>;
+      List<Person> onlineMembers = await _fetchOnlineMemberDetails(membersData);
 
-          setState(() {
-            _selectedPerson = null;
-            _selectedOnlineUserName = displayName;
-            _isShowingResult = true;
-          });
-          _confettiController.play();
-        });
+      if (onlineMembers.isEmpty) {
+        _showErrorSnackbar('Could not load any member data.');
+        return;
+      }
+
+      final summary = <Drink, int>{};
+      for (final person in onlineMembers) {
+        summary[person.preferredDrink] = (summary[person.preferredDrink] ?? 0) + 1;
+      }
+
+      final minRounds = onlineMembers.map((p) => p.numberOfRounds).reduce(min);
+      var eligibleMembers = onlineMembers.where((p) => p.numberOfRounds == minRounds).toList();
+      if (eligibleMembers.length > 1 && _lastSelectedOnlineUid != null) {
+        eligibleMembers.removeWhere((p) => p.uid == _lastSelectedOnlineUid);
+      }
+
+      final random = Random();
+      final winner = eligibleMembers[random.nextInt(eligibleMembers.length)];
+
+      final memberRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members/${winner.uid}');
+      await memberRef.update({'numberOfRounds': winner.numberOfRounds + 1});
+      final groupRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId');
+      await groupRef.update({'lastUpdated': ServerValue.timestamp});
+
+      setState(() {
+        _selectedPerson = null;
+        _selectedOnlineUserName = winner.name;
+        _lastSelectedOnlineUid = winner.uid;
+        _isShowingResult = true;
+        _drinkSummary = summary;
       });
+      _confettiController.play();
     }
   }
+
 
   void _hideResult() {
     setState(() {
       _isShowingResult = false;
+      _drinkSummary = {};
     });
   }
 
@@ -196,6 +261,40 @@ class _NameListScreenState extends State<NameListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
+  }
+
+  Future<void> _resetAllCounters() async {
+    if (_activeGroupId == null) {
+      // Reset local group
+      setState(() {
+        for (var person in _localGroupMembers) {
+          person.numberOfRounds = 0;
+        }
+      });
+      await _saveLocalGroup();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Local counters have been reset.')),
+        );
+      }
+    } else {
+      // Reset online group
+      final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
+      final snapshot = await membersRef.get();
+      if (snapshot.exists) {
+        final updates = <String, dynamic>{};
+        final members = snapshot.value as Map<dynamic, dynamic>;
+        for (final uid in members.keys) {
+          updates['$uid/numberOfRounds'] = 0;
+        }
+        await membersRef.update(updates);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Group counters have been reset.')),
+          );
+        }
+      }
+    }
   }
 
   // --- Navigation ---
@@ -214,14 +313,7 @@ class _NameListScreenState extends State<NameListScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AccountScreen(
-          onResetCounters: () async {
-            setState(() {
-              for (var person in _localGroupMembers) {
-                person.numberOfRounds = 0;
-              }
-            });
-            await _saveLocalGroup();
-          },
+          onResetCounters: _resetAllCounters,
         ),
       ),
     );
@@ -370,21 +462,49 @@ class _NameListScreenState extends State<NameListScreen> {
           return const Center(child: Text('This group has no members yet.'));
         }
 
-        final members = (snapshot.data!.snapshot.value as Map<dynamic, dynamic>).keys.toList();
+        final membersData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
 
-        return ListView.builder(
-          itemCount: members.length,
-          itemBuilder: (context, index) {
-            final uid = members[index];
-            return OnlineMemberTile(uid: uid);
+        return FutureBuilder<List<Person>>(
+          future: _fetchOnlineMemberDetails(membersData),
+          builder: (context, membersSnapshot) {
+            if (membersSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (membersSnapshot.hasError || !membersSnapshot.hasData || membersSnapshot.data == null) {
+              return const Center(child: Text('Could not load member details.'));
+            }
+
+            final onlineMembers = membersSnapshot.data!;
+
+            return ListView.builder(
+              itemCount: onlineMembers.length,
+              itemBuilder: (context, index) {
+                final member = onlineMembers[index];
+                return ListTile(
+                  title: Text(member.name),
+                  subtitle: Text('Prefers: ${member.preferredDrink.displayName}'),
+                  trailing: Text(member.numberOfRounds.toString(), style: const TextStyle(fontSize: 18)),
+                );
+              },
+            );
           },
         );
       },
     );
   }
 
+  String _formatDrinkSummary() {
+    if (_drinkSummary.isEmpty) {
+      return '';
+    }
+    return _drinkSummary.entries
+        .map((entry) => '${entry.value}x ${entry.key.displayName}')
+        .join('  •  ');
+  }
+
   Widget _buildResultOverlay() {
     final displayName = _selectedOnlineUserName ?? _selectedPerson?.name ?? "";
+    final summaryText = _formatDrinkSummary();
 
     return GestureDetector(
       onTap: _hideResult,
@@ -404,6 +524,16 @@ class _NameListScreenState extends State<NameListScreen> {
                 'moet bier gaan halen',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.normal, color: Colors.white, decoration: TextDecoration.none),
               ),
+              const SizedBox(height: 48),
+              if (summaryText.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Text(
+                    summaryText,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.normal, color: Colors.white, decoration: TextDecoration.none),
+                  ),
+                ),
             ],
           ),
         ),
@@ -412,48 +542,46 @@ class _NameListScreenState extends State<NameListScreen> {
   }
 
   Future<void> _showAddNameDialog() async {
-    final TextEditingController nameController = TextEditingController();
-    final String? newName = await showDialog<String>(
+    final nameController = TextEditingController();
+    await showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          title: const Text('Add a New Name'),
+          title: const Text('Naam toevoegen'),
           content: TextField(
             controller: nameController,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Name'),
-            onSubmitted: (name) => Navigator.of(context).pop(name),
+            decoration: const InputDecoration(labelText: 'Naam'),
           ),
-          actions: <Widget>[
+          actions: [
             TextButton(
-              child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuleren'),
             ),
             ElevatedButton(
-              child: const Text('Add'),
-              onPressed: () => Navigator.of(context).pop(nameController.text),
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isNotEmpty) {
+                  setState(() {
+                    _localGroupMembers.add(Person(name: name));
+                  });
+                  _saveLocalGroup();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Toevoegen'),
             ),
           ],
         );
       },
     );
-
-    if (newName != null && newName.isNotEmpty) {
-      setState(() {
-        _localGroupMembers.add(Person(name: newName));
-      });
-      await _saveLocalGroup();
-    }
   }
 
-  Future<void> _showQrCodeDialog() async {
-    if (_activeGroupId == null) return;
-
+  void _showQrCodeDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(_activeGroupName),
           content: SizedBox(
             width: 250,
             height: 250,
@@ -462,72 +590,8 @@ class _NameListScreenState extends State<NameListScreen> {
                 data: _activeGroupId!,
                 version: QrVersions.auto,
                 size: 200.0,
-                backgroundColor: Colors.white,
               ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Done'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class OnlineMemberTile extends StatelessWidget {
-  final String uid;
-  const OnlineMemberTile({Key? key, required this.uid}) : super(key: key);
-
-  // Helper to get an icon for a drink
-  IconData _getDrinkIcon(Drink drink) {
-    switch (drink) {
-      case Drink.beer:
-        return Icons.sports_bar;
-      case Drink.whiskey:
-        return Icons.local_bar;
-      case Drink.wine:
-        return Icons.wine_bar;
-      case Drink.cola:
-        return Icons.local_cafe;
-      default:
-        return Icons.emoji_food_beverage;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final userRef = FirebaseDatabase.instance.ref('users/$uid');
-    return StreamBuilder<DatabaseEvent>(
-      stream: userRef.onValue,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return const ListTile(title: Text('Loading user...'));
-        }
-        final userData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-        final firstName = userData['firstName'] ?? 'Unknown';
-        final lastNameInitial = userData['lastNameInitial'] ?? '';
-
-        final displayName = '$firstName ${lastNameInitial.isNotEmpty ? lastNameInitial + "." : ""}'.trim();
-
-        final preferredDrinkString = userData['preferredDrink'] as String? ?? 'Drink.beer';
-        final preferredDrink = Drink.values.firstWhere(
-              (e) => e.toString() == preferredDrinkString,
-          orElse: () => Drink.beer,
-        );
-
-        final numberOfRounds = userData['numberOfRounds'] as int? ?? 0;
-
-        return ListTile(
-          leading: Icon(_getDrinkIcon(preferredDrink), color: Theme.of(context).colorScheme.primary),
-          title: Text(displayName),
-          subtitle: Text(preferredDrink.displayName),
-          trailing: Text(
-            numberOfRounds.toString(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         );
       },

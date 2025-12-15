@@ -2,6 +2,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wie_moet_er_bier_gaan_halen/name_list_screen.dart'; // For Drink Enum
 
 // The main entry point for the screen. It's a stateless widget that
@@ -158,9 +159,13 @@ class _ProfileEditorState extends State<ProfileEditor> {
   }
 
   Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('active_group', 'local');
+
     await FirebaseAuth.instance.signOut();
+
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacementNamed('/auth');
     }
   }
 
@@ -179,7 +184,11 @@ class _ProfileEditorState extends State<ProfileEditor> {
           children: [
             Text('Logged in as:', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text(widget.user.email ?? 'No email', style: Theme.of(context).textTheme.bodyLarge),
+            SelectableText(
+              widget.user.email ?? 'No email provided',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _firstNameController,
