@@ -1,0 +1,13 @@
+{
+  "@@locale": "nl",
+  "list_of_names": "Bier drinkers lijst",
+  "add_name_tooltip": "Naam Toevoegen",
+  "pick_random_name_button": "Wie moet er bier gaan halen",
+  "add_new_name_dialog_title": "Voeg een Nieuwe Naam Toe",
+  "name_label": "Naam",
+  "enter_name_hint": "Voer de naam in",
+  "cancel_button": "Annuleren",
+  "add_button": "Toevoegen",
+  "no_names_warning": "Voeg eerst namen toe aan de lijst!",
+  "must_get_beer": "moet bier gaan halen"
+}

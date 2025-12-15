@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+  "list_of_names": "Beer drinkers list",
+  "add_name_tooltip": "Add Name",
+  "pick_random_name_button": "Who has to go get beer?",
+  "add_new_name_dialog_title": "Add a New Name",
+  "name_label": "Name",
+  "enter_name_hint": "Enter the name",
+  "cancel_button": "Cancel",
+  "add_button": "Add",
+  "no_names_warning": "Please add some names to the list first!",
+  "must_get_beer": "must get beer",
+  "@must_get_beer": {
+    "description": "The phrase that appears under the selected name"
+  }
+}
