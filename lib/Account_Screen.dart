@@ -1,12 +1,9 @@
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wie_moet_er_bier_gaan_halen/name_list_screen.dart'; // For Drink Enum
+import 'package:wie_moet_er_bier_gaan_halen/name_list_screen.dart';
 
-// The main entry point for the screen. It's a stateless widget that
-// uses a StreamBuilder to reactively switch between logged-in and logged-out views.
 class AccountScreen extends StatelessWidget {
   final Future<void> Function() onResetCounters;
 
@@ -28,10 +25,8 @@ class AccountScreen extends StatelessWidget {
           final user = snapshot.data;
 
           if (user != null) {
-            // If the user is logged in, show the full profile editor.
             return ProfileEditor(user: user, onResetCounters: onResetCounters);
           } else {
-            // If logged out, show a simple view with login and reset buttons.
             return LoggedOutView(onResetCounters: onResetCounters);
           }
         },
@@ -40,7 +35,6 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-// A dedicated stateless widget for the logged-out state.
 class LoggedOutView extends StatelessWidget {
   final Future<void> Function() onResetCounters;
 
@@ -68,7 +62,6 @@ class LoggedOutView extends StatelessWidget {
   }
 }
 
-// A dedicated stateful widget that contains the form for editing the user's profile.
 class ProfileEditor extends StatefulWidget {
   final User user;
   final Future<void> Function() onResetCounters;
@@ -115,7 +108,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
           final drinkString = data['preferredDrink'];
           _selectedDrink = Drink.values.firstWhere(
                 (e) => e.toString() == drinkString,
-            orElse: () => Drink.beer, // Default to beer if parsing fails
+            orElse: () => Drink.beer,
           );
         });
       }
@@ -244,7 +237,6 @@ class _ProfileEditorState extends State<ProfileEditor> {
   }
 }
 
-// Helper function for the reset button, usable by both logged-in and logged-out views.
 Widget _buildResetCountersButton(BuildContext context, Future<void> Function() onResetCounters) {
   return ElevatedButton(
     onPressed: () async {

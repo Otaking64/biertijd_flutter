@@ -53,7 +53,6 @@ class _AppEntryState extends State<AppEntry> {
         if (snapshot.hasData) {
           return MyApp(initialRoute: snapshot.data!);
         } else {
-          // Should not happen, but have a fallback
           return MyApp(initialRoute: '/auth');
         }
       },

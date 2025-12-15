@@ -1,4 +1,3 @@
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,13 +26,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         _errorMessage = '';
       });
       try {
-        // Create user with Firebase Auth
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Save additional user info to Realtime Database
         DatabaseReference userRef = FirebaseDatabase.instance.ref('users/${userCredential.user!.uid}');
         await userRef.set({
           'firstName': _firstNameController.text.trim(),
@@ -42,11 +39,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           'preferredDrink': _selectedDrink.toString(),
         });
 
-        // Set the flag to indicate the user has completed this flow
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('hasSeenAuthScreen', true);
 
-        // Navigate to the home screen
         if (mounted) {
           Navigator.of(context).pushReplacementNamed('/home');
         }

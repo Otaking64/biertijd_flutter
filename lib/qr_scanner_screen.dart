@@ -1,4 +1,3 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -49,11 +48,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     }
 
     final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-
-    // Add user to the group's member list
     await dbRef.child('groups/$groupId/members/${currentUser.uid}').set(true);
-
-    // Add group to the user's group list
     await dbRef.child('users/${currentUser.uid}/groups/$groupId').set(true);
 
     if (mounted) {

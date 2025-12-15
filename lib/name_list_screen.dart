@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -141,7 +140,6 @@ class _NameListScreenState extends State<NameListScreen> {
       final memberInfo = entry.value;
 
       int numberOfRounds = 0;
-      // Backwards compatibility: memberInfo could be `true` or a map `{ 'numberOfRounds': x }`
       if (memberInfo is Map && memberInfo.containsKey('numberOfRounds')) {
         numberOfRounds = memberInfo['numberOfRounds'] as int;
       }
@@ -160,7 +158,7 @@ class _NameListScreenState extends State<NameListScreen> {
         onlineMembers.add(Person(
           uid: uid,
           name: '$firstName ${lastNameInitial.isNotEmpty ? '$lastNameInitial.' : ''}'.trim(),
-          numberOfRounds: numberOfRounds, // Group-specific rounds
+          numberOfRounds: numberOfRounds,
           preferredDrink: preferredDrink,
         ));
       }
