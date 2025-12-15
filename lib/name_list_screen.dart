@@ -1,16 +1,17 @@
+
 import 'dart:convert';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Account_Screen.dart';
 
-// Define an enum for the drink choices
 enum Drink { beer, whiskey, wine, cola }
 
-// Extension to get a user-friendly string from the enum
 extension DrinkExtension on Drink {
   String get displayName {
     switch (this) {
@@ -30,51 +31,57 @@ extension DrinkExtension on Drink {
 
 class Person {
   String name;
-  int beerCount;
-  Drink preferredDrink; // Add preferredDrink field
+  int numberOfRounds;
+  Drink preferredDrink;
+  String? uid;
 
   Person({
     required this.name,
-    this.beerCount = 0,
-    this.preferredDrink = Drink.beer, // Default drink is beer
+    this.numberOfRounds = 0,
+    this.preferredDrink = Drink.beer,
+    this.uid,
   });
 
   factory Person.fromJson(Map<String, dynamic> json) {
     return Person(
       name: json['name'],
-      beerCount: json['beerCount'] ?? 0,
-      // Handle deserialization of the preferredDrink
+      numberOfRounds: json['numberOfRounds'] ?? 0,
       preferredDrink: Drink.values.firstWhere(
             (e) => e.toString() == json['preferredDrink'],
-        orElse: () => Drink.beer, // Default to beer if not found
+        orElse: () => Drink.beer,
       ),
+      uid: json['uid'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'beerCount': beerCount,
-      'preferredDrink': preferredDrink.toString(), // Store enum as string
+      'numberOfRounds': numberOfRounds,
+      'preferredDrink': preferredDrink.toString(),
+      'uid': uid,
     };
   }
 }
 
-class NameListPage extends StatefulWidget {
-  final User? user;
-  const NameListPage({Key? key, this.user}) : super(key: key);
+class NameListScreen extends StatefulWidget {
+  const NameListScreen({Key? key}) : super(key: key);
 
   @override
-  State<NameListPage> createState() => _NameListPageState();
+  State<NameListScreen> createState() => _NameListScreenState();
 }
 
-class _NameListPageState extends State<NameListPage> {
-  final List<Person> _people = [];
+class _NameListScreenState extends State<NameListScreen> {
+  final List<Person> _localGroupMembers = [];
+  String? _activeGroupId;
+  String _activeGroupName = 'Local Group (On this device)';
 
   bool _isShowingResult = false;
   Person? _selectedPerson;
+  String? _selectedOnlineUserName;
 
   late ConfettiController _confettiController;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -82,7 +89,7 @@ class _NameListPageState extends State<NameListPage> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
-    _loadPeople();
+    _loadLocalGroup();
   }
 
   @override
@@ -91,52 +98,92 @@ class _NameListPageState extends State<NameListPage> {
     super.dispose();
   }
 
-  Future<void> _loadPeople() async {
+  Future<void> _loadLocalGroup() async {
     final prefs = await SharedPreferences.getInstance();
     final peopleJson = prefs.getStringList('people') ?? [];
     setState(() {
-      _people.clear();
-      _people.addAll(peopleJson.map((p) => Person.fromJson(jsonDecode(p))));
+      _localGroupMembers.clear();
+      _localGroupMembers.addAll(peopleJson.map((p) => Person.fromJson(jsonDecode(p))));
     });
   }
 
-  Future<void> _savePeople() async {
+  Future<void> _saveLocalGroup() async {
     final prefs = await SharedPreferences.getInstance();
-    final peopleJson = _people.map((p) => jsonEncode(p.toJson())).toList();
+    final peopleJson = _localGroupMembers.map((p) => jsonEncode(p.toJson())).toList();
     await prefs.setStringList('people', peopleJson);
   }
 
-  Future<void> _resetCounters() async {
+  Future<void> _setActiveGroup(String groupId) async {
+    final groupNameRef = FirebaseDatabase.instance.ref('groups/$groupId/name');
+    final snapshot = await groupNameRef.get();
     setState(() {
-      for (var person in _people) {
-        person.beerCount = 0;
-      }
+      _activeGroupId = groupId;
+      _activeGroupName = (snapshot.value as String?) ?? 'Unnamed Group';
     });
-    await _savePeople();
+  }
+
+  void _clearActiveGroup() {
+    setState(() {
+      _activeGroupId = null;
+      _activeGroupName = 'Local Group (On this device)';
+    });
+    _loadLocalGroup();
   }
 
   void _pickRandomName() {
-    if (_people.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Voeg eerst wat namen toe.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+    if (_activeGroupId == null) {
+      // Local group logic
+      if (_localGroupMembers.isEmpty) {
+        _showErrorSnackbar('Voeg eerst wat namen toe.');
+        return;
+      }
+      final random = Random();
+      final index = random.nextInt(_localGroupMembers.length);
+      final selectedPerson = _localGroupMembers[index];
+
+      setState(() {
+        selectedPerson.numberOfRounds++;
+        _selectedPerson = selectedPerson;
+        _selectedOnlineUserName = null;
+        _isShowingResult = true;
+      });
+      _saveLocalGroup();
+      _confettiController.play();
+    } else {
+      // Online group logic
+      final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
+      membersRef.once().then((snapshot) {
+        if (!snapshot.snapshot.exists || snapshot.snapshot.value == null) {
+          _showErrorSnackbar('This group has no members.');
+          return;
+        }
+        final members = (snapshot.snapshot.value as Map<dynamic, dynamic>).keys.toList();
+        final random = Random();
+        final selectedUid = members[random.nextInt(members.length)];
+
+        final userRef = FirebaseDatabase.instance.ref('users/$selectedUid');
+        userRef.once().then((userSnapshot) {
+          String displayName = 'Unknown User';
+          if (userSnapshot.snapshot.exists && userSnapshot.snapshot.value != null) {
+            final userData = userSnapshot.snapshot.value as Map<dynamic, dynamic>;
+            final firstName = userData['firstName'] ?? 'Unknown';
+            final lastNameInitial = userData['lastNameInitial'] ?? '';
+            displayName = '$firstName ${lastNameInitial.isNotEmpty ? lastNameInitial + "." : ""}'.trim();
+
+            // Increment the round count
+            final currentRounds = userData['numberOfRounds'] as int? ?? 0;
+            userRef.update({'numberOfRounds': currentRounds + 1});
+          }
+
+          setState(() {
+            _selectedPerson = null;
+            _selectedOnlineUserName = displayName;
+            _isShowingResult = true;
+          });
+          _confettiController.play();
+        });
+      });
     }
-
-    final random = Random();
-    final index = random.nextInt(_people.length);
-    final selectedPerson = _people[index];
-
-    setState(() {
-      selectedPerson.beerCount++;
-      _selectedPerson = selectedPerson;
-      _isShowingResult = true;
-    });
-    _savePeople();
-    _confettiController.play();
   }
 
   void _hideResult() {
@@ -145,90 +192,81 @@ class _NameListPageState extends State<NameListPage> {
     });
   }
 
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  // --- Navigation ---
+
+  void _navigateToGroups() async {
+    final result = await Navigator.of(context).pushNamed('/groups');
+    if (result is String) {
+      _setActiveGroup(result);
+    } else if (result == null) {
+      _clearActiveGroup();
+    }
+  }
+
+  void _navigateToAccount() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccountScreen(
+          onResetCounters: () async {
+            setState(() {
+              for (var person in _localGroupMembers) {
+                person.numberOfRounds = 0;
+              }
+            });
+            await _saveLocalGroup();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text('Bier halers'),
+            title: Text(_activeGroupName),
             actions: [
+              if (_currentUser != null)
+                IconButton(
+                  icon: const Icon(Icons.group),
+                  tooltip: 'Groups',
+                  onPressed: _navigateToGroups,
+                ),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'account') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AccountScreen(
-                          onResetCounters: _resetCounters,
-                          user: widget.user,
-                        ),
-                      ),
-                    );
+                    _navigateToAccount();
                   }
                 },
-                itemBuilder: (BuildContext context) {
-                  return [
-                    const PopupMenuItem<String>(
-                      value: 'account',
-                      child: Text('Account'),
-                    ),
-                  ];
-                },
+                itemBuilder: (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'account',
+                    child: Text('Account & Settings'),
+                  ),
+                ],
               ),
             ],
           ),
-          body: ListView.builder(
-            itemCount: _people.length,
-            itemBuilder: (context, index) {
-              final person = _people[index];
-              return ListTile(
-                title: Text(person.name),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Add dropdown for drink selection
-                    DropdownButton<Drink>(
-                      value: person.preferredDrink,
-                      onChanged: (Drink? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            person.preferredDrink = newValue;
-                          });
-                          _savePeople();
-                        }
-                      },
-                      items: Drink.values.map<DropdownMenuItem<Drink>>((Drink value) {
-                        return DropdownMenuItem<Drink>(
-                          value: value,
-                          child: Text(value.displayName),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      person.beerCount.toString(),
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () {
-                        setState(() {
-                          _people.removeAt(index);
-                        });
-                        _savePeople();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+          body: _buildBody(),
           floatingActionButton: FloatingActionButton(
-            onPressed: _showAddNameDialog,
-            tooltip: 'Naam toevoegen',
-            child: const Icon(Icons.add),
+            onPressed: () {
+              if (_activeGroupId == null) {
+                _showAddNameDialog();
+              } else {
+                _showQrCodeDialog();
+              }
+            },
+            tooltip: _activeGroupId == null ? 'Naam toevoegen' : 'Show Group QR',
+            child: Icon(_activeGroupId == null ? Icons.add : Icons.qr_code),
           ),
           persistentFooterButtons: [
             SizedBox(
@@ -248,59 +286,128 @@ class _NameListPageState extends State<NameListPage> {
             ),
           ],
         ),
-        if (_isShowingResult && _selectedPerson != null)
-          GestureDetector(
-            onTap: _hideResult,
-            child: Container(
-              color: Colors.black.withOpacity(0.85),
-              child: Center(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        _selectedPerson!.name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 72,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'moet bier gaan halen',
-                        style: TextStyle(
-                          fontSize: 28, // Smaller font size
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+        if (_isShowingResult)
+          _buildResultOverlay(),
         ConfettiWidget(
           confettiController: _confettiController,
           blastDirectionality: BlastDirectionality.explosive,
           shouldLoop: false,
           numberOfParticles: 50,
           gravity: 0.3,
-          emissionFrequency: 0.1, // How often particles are emitted
+          emissionFrequency: 0.1,
           colors: const [
-            Colors.green,
-            Colors.blue,
-            Colors.pink,
-            Colors.orange,
-            Colors.purple,
+            Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildBody() {
+    if (_activeGroupId == null) {
+      return _buildLocalGroupList();
+    } else {
+      return _buildOnlineGroupList();
+    }
+  }
+
+  Widget _buildLocalGroupList() {
+    return ListView.builder(
+      itemCount: _localGroupMembers.length,
+      itemBuilder: (context, index) {
+        final person = _localGroupMembers[index];
+        final isCurrentUser = _currentUser?.uid == person.uid;
+        return ListTile(
+          title: Text(person.name),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<Drink>(
+                value: person.preferredDrink,
+                onChanged: (Drink? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      person.preferredDrink = newValue;
+                    });
+                    _saveLocalGroup();
+                  }
+                },
+                items: Drink.values.map((Drink value) {
+                  return DropdownMenuItem<Drink>(
+                    value: value,
+                    child: Text(value.displayName),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(width: 16),
+              Text(person.numberOfRounds.toString(), style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: isCurrentUser ? null : () {
+                  setState(() {
+                    _localGroupMembers.removeAt(index);
+                  });
+                  _saveLocalGroup();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOnlineGroupList() {
+    final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
+    return StreamBuilder<DatabaseEvent>(
+      stream: membersRef.onValue,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+          return const Center(child: Text('This group has no members yet.'));
+        }
+
+        final members = (snapshot.data!.snapshot.value as Map<dynamic, dynamic>).keys.toList();
+
+        return ListView.builder(
+          itemCount: members.length,
+          itemBuilder: (context, index) {
+            final uid = members[index];
+            return OnlineMemberTile(uid: uid);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildResultOverlay() {
+    final displayName = _selectedOnlineUserName ?? _selectedPerson?.name ?? "";
+
+    return GestureDetector(
+      onTap: _hideResult,
+      child: Container(
+        color: Colors.black.withOpacity(0.85),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 72, fontWeight: FontWeight.bold, color: Colors.white, decoration: TextDecoration.none),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'moet bier gaan halen',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.normal, color: Colors.white, decoration: TextDecoration.none),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -319,11 +426,11 @@ class _NameListPageState extends State<NameListPage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('annuleren'),
+              child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
             ),
             ElevatedButton(
-              child: const Text('Toevoegen'),
+              child: const Text('Add'),
               onPressed: () => Navigator.of(context).pop(nameController.text),
             ),
           ],
@@ -333,9 +440,97 @@ class _NameListPageState extends State<NameListPage> {
 
     if (newName != null && newName.isNotEmpty) {
       setState(() {
-        _people.add(Person(name: newName));
+        _localGroupMembers.add(Person(name: newName));
       });
-      await _savePeople();
+      await _saveLocalGroup();
     }
+  }
+
+  Future<void> _showQrCodeDialog() async {
+    if (_activeGroupId == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(_activeGroupName),
+          content: SizedBox(
+            width: 250,
+            height: 250,
+            child: Center(
+              child: QrImageView(
+                data: _activeGroupId!,
+                version: QrVersions.auto,
+                size: 200.0,
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Done'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class OnlineMemberTile extends StatelessWidget {
+  final String uid;
+  const OnlineMemberTile({Key? key, required this.uid}) : super(key: key);
+
+  // Helper to get an icon for a drink
+  IconData _getDrinkIcon(Drink drink) {
+    switch (drink) {
+      case Drink.beer:
+        return Icons.sports_bar;
+      case Drink.whiskey:
+        return Icons.local_bar;
+      case Drink.wine:
+        return Icons.wine_bar;
+      case Drink.cola:
+        return Icons.local_cafe;
+      default:
+        return Icons.emoji_food_beverage;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userRef = FirebaseDatabase.instance.ref('users/$uid');
+    return StreamBuilder<DatabaseEvent>(
+      stream: userRef.onValue,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+          return const ListTile(title: Text('Loading user...'));
+        }
+        final userData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+        final firstName = userData['firstName'] ?? 'Unknown';
+        final lastNameInitial = userData['lastNameInitial'] ?? '';
+
+        final displayName = '$firstName ${lastNameInitial.isNotEmpty ? lastNameInitial + "." : ""}'.trim();
+
+        final preferredDrinkString = userData['preferredDrink'] as String? ?? 'Drink.beer';
+        final preferredDrink = Drink.values.firstWhere(
+              (e) => e.toString() == preferredDrinkString,
+          orElse: () => Drink.beer,
+        );
+
+        final numberOfRounds = userData['numberOfRounds'] as int? ?? 0;
+
+        return ListTile(
+          leading: Icon(_getDrinkIcon(preferredDrink), color: Theme.of(context).colorScheme.primary),
+          title: Text(displayName),
+          subtitle: Text(preferredDrink.displayName),
+          trailing: Text(
+            numberOfRounds.toString(),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        );
+      },
+    );
   }
 }

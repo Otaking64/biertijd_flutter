@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wie_moet_er_bier_gaan_halen/authentication_screen.dart';
+import 'package:wie_moet_er_bier_gaan_halen/groups_screen.dart';
 import 'package:wie_moet_er_bier_gaan_halen/registration_screen.dart';
 import 'name_list_screen.dart';
 import 'firebase_options.dart';
@@ -90,23 +90,9 @@ class MyApp extends StatelessWidget {
       initialRoute: initialRoute,
       routes: {
         '/auth': (context) => const AuthenticationScreen(),
-        '/home': (context) => const AuthWrapper(),
+        '/home': (context) => const NameListScreen(),
         '/register': (context) => const RegistrationScreen(),
-      },
-    );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // The user object is passed to NameListPage, which can be null.
-        return NameListPage(user: snapshot.data);
+        '/groups': (context) => const GroupsScreen(),
       },
     );
   }
