@@ -1,60 +1,113 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wie_moet_er_bier_gaan_halen/authentication_screen.dart';
+import 'package:wie_moet_er_bier_gaan_halen/registration_screen.dart';
 import 'name_list_screen.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform.copyWith(
+      databaseURL: "https://biertijdapp.firebaseio.com",
+    ),
+  );
+  runApp(const AppEntry());
 }
 
-final Color mainYellow = Color(0xFFFBC02D);
+class AppEntry extends StatefulWidget {
+  const AppEntry({super.key});
 
-final ThemeData lightTheme = ThemeData(
-  useMaterial3: true,
+  @override
+  State<AppEntry> createState() => _AppEntryState();
+}
 
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: mainYellow,
-    primary: mainYellow,
-    brightness: Brightness.light,
-  ),
+class _AppEntryState extends State<AppEntry> {
+  late Future<String> _initialRouteFuture;
 
-  appBarTheme: const AppBarTheme(foregroundColor: Colors.black),
-);
+  @override
+  void initState() {
+    super.initState();
+    _initialRouteFuture = _getInitialRoute();
+  }
 
-final ThemeData darkTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: mainYellow,
+  Future<String> _getInitialRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenAuthScreen = prefs.getBool('hasSeenAuthScreen') ?? false;
+    return hasSeenAuthScreen ? '/home' : '/auth';
+  }
 
-    brightness: Brightness.dark,
-  ),
-  appBarTheme: const AppBarTheme(foregroundColor: Colors.white),
-);
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _initialRouteFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const MaterialApp(
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
+          );
+        }
+
+        if (snapshot.hasData) {
+          return MyApp(initialRoute: snapshot.data!);
+        } else {
+          // Should not happen, but have a fallback
+          return MyApp(initialRoute: '/auth');
+        }
+      },
+    );
+  }
+}
+
+final Color mainYellow = const Color(0xFFFBC02D);
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final String initialRoute;
+
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Name App',
-      // Using the themes we defined earlier
+      title: 'Biertijd App',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFBC02D),
+          seedColor: mainYellow,
           brightness: Brightness.light,
         ),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFBC02D),
+          seedColor: mainYellow,
           brightness: Brightness.dark,
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const NameListPage(),
+      initialRoute: initialRoute,
+      routes: {
+        '/auth': (context) => const AuthenticationScreen(),
+        '/home': (context) => const AuthWrapper(),
+        '/register': (context) => const RegistrationScreen(),
+      },
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // The user object is passed to NameListPage, which can be null.
+        return NameListPage(user: snapshot.data);
+      },
     );
   }
 }

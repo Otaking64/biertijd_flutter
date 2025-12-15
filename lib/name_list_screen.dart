@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,8 @@ class Person {
 }
 
 class NameListPage extends StatefulWidget {
-  const NameListPage({Key? key}) : super(key: key);
+  final User? user;
+  const NameListPage({Key? key, this.user}) : super(key: key);
 
   @override
   State<NameListPage> createState() => _NameListPageState();
@@ -157,8 +159,10 @@ class _NameListPageState extends State<NameListPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AccountScreen(onResetCounters: _resetCounters),
+                        builder: (context) => AccountScreen(
+                          onResetCounters: _resetCounters,
+                          user: widget.user,
+                        ),
                       ),
                     );
                   }

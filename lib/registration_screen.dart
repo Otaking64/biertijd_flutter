@@ -1,0 +1,168 @@
+
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'name_list_screen.dart';
+
+class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({Key? key}) : super(key: key);
+
+  @override
+  _RegistrationScreenState createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameInitialController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  Drink? _selectedDrink = Drink.beer;
+  String _errorMessage = '';
+
+  Future<void> _register() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = '';
+      });
+      try {
+        // Create user with Firebase Auth
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        // Save additional user info to Realtime Database
+        DatabaseReference userRef = FirebaseDatabase.instance.ref('users/${userCredential.user!.uid}');
+        await userRef.set({
+          'firstName': _firstNameController.text.trim(),
+          'lastNameInitial': _lastNameInitialController.text.trim(),
+          'email': _emailController.text.trim(),
+          'preferredDrink': _selectedDrink.toString(),
+        });
+
+        // Set the flag to indicate the user has completed this flow
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('hasSeenAuthScreen', true);
+
+        // Navigate to the home screen
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _errorMessage = e.message ?? 'An unknown error occurred.';
+        });
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'An unexpected error occurred. Please try again.';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Account'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _firstNameController,
+                  decoration: const InputDecoration(labelText: 'First Name'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your first name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _lastNameInitialController,
+                  decoration: const InputDecoration(labelText: 'First Letter of Last Name'),
+                  maxLength: 1,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the first letter of your last name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty || !value.contains('@')) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty || value.length < 6) {
+                      return 'Password must be at least 6 characters long';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<Drink>(
+                  value: _selectedDrink,
+                  decoration: const InputDecoration(labelText: 'Preferred Drink'),
+                  items: Drink.values.map((Drink drink) {
+                    return DropdownMenuItem<Drink>(
+                      value: drink,
+                      child: Text(drink.displayName),
+                    );
+                  }).toList(),
+                  onChanged: (Drink? newValue) {
+                    setState(() {
+                      _selectedDrink = newValue;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select your preferred drink';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                if (_errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      _errorMessage,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ElevatedButton(
+                  onPressed: _register,
+                  child: const Text('Register'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
