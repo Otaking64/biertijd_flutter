@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 
 class AuthenticationScreen extends StatefulWidget {
   const AuthenticationScreen({super.key});
@@ -20,7 +21,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       setState(() {
-        _message = 'Please enter both email and password.';
+        _message = translations.enterEmailAndPasswordMessage;
         _isError = true;
       });
       return;
@@ -54,16 +55,15 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Reset Password'),
+              title: Text(translations.resetPasswordTitle),
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
-                    const Text(
-                        'Enter your email address below to receive a password reset link.'),
+                    Text(translations.resetPasswordInstruction),
                     const SizedBox(height: 16),
                     TextField(
                       controller: emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(labelText: translations.emailLabel),
                       keyboardType: TextInputType.emailAddress,
                       autofocus: true,
                     ),
@@ -81,18 +81,18 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Cancel'),
+                  child: Text(translations.cancel_button),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 ElevatedButton(
-                  child: const Text('Send Reset Email'),
+                  child: Text(translations.sendResetEmailButton),
                   onPressed: () async {
                     if (emailController.text.isEmpty) {
                       setState(() {
                         dialogMessage =
-                            'Please enter your email to reset your password.';
+                            translations.enterEmailToResetPasswordMessage;
                         isError = true;
                       });
                       return;
@@ -102,7 +102,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                           email: emailController.text);
                       setState(() {
                         dialogMessage =
-                            'Password reset email sent. Please check your inbox.';
+                            translations.passwordResetEmailSentMessage;
                         isError = false;
                       });
                     } on FirebaseAuthException catch (e) {
@@ -137,7 +137,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Authentication'),
+        title: Text(translations.authScreenTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -146,13 +146,13 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           children: [
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: translations.emailLabel),
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: translations.passwordLabel),
               obscureText: true,
             ),
             const SizedBox(height: 24),
@@ -169,25 +169,25 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
               children: [
                 ElevatedButton(
                   onPressed: _login,
-                  child: const Text('Login'),
+                  child: Text(translations.loginButton),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushNamed('/register');
                   },
-                  child: const Text('Register'),
+                  child: Text(translations.registerButton),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _showPasswordResetDialog,
-              child: const Text('Forgot Password?'),
+              child: Text(translations.forgotPasswordButton),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _continueOffline,
-              child: const Text('Continue without signing in'),
+              child: Text(translations.continueOfflineButton),
             ),
           ],
         ),

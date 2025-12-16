@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 import 'package:wie_moet_er_bier_gaan_halen/name_list_screen.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -13,7 +14,7 @@ class AccountScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account & Settings'),
+        title: Text(translations.accountSettingsTitle),
       ),
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -50,7 +51,7 @@ class LoggedOutView extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).pushReplacementNamed('/auth'),
             icon: const Icon(Icons.login),
-            label: const Text('Login or Register'),
+            label: Text(translations.loginOrRegisterButton),
           ),
           const SizedBox(height: 32),
           const Divider(),
@@ -115,7 +116,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load user data: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(translations.loadUserDataError(e.toString())), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -138,13 +139,13 @@ class _ProfileEditorState extends State<ProfileEditor> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!'), backgroundColor: Colors.green),
+            SnackBar(content: Text(translations.profileUpdatedSuccess), backgroundColor: Colors.green),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text(translations.profileUpdateError(e.toString())), backgroundColor: Colors.red),
           );
         }
       }
@@ -175,30 +176,30 @@ class _ProfileEditorState extends State<ProfileEditor> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Logged in as:', style: Theme.of(context).textTheme.titleMedium),
+            Text(translations.loggedInAsLabel, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             SelectableText(
-              widget.user.email ?? 'No email provided',
+              widget.user.email ?? translations.noEmailProvidedLabel,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _firstNameController,
-              decoration: const InputDecoration(labelText: 'First Name'),
-              validator: (value) => value!.isEmpty ? 'Please enter your first name' : null,
+              decoration: InputDecoration(labelText: translations.firstNameLabel),
+              validator: (value) => value!.isEmpty ? translations.firstNameEmptyError : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _lastNameInitialController,
-              decoration: const InputDecoration(labelText: 'First Letter of Last Name'),
+              decoration: InputDecoration(labelText: translations.lastNameInitialLabel),
               maxLength: 1,
-              validator: (value) => value!.isEmpty ? 'Please enter the first letter of your last name' : null,
+              validator: (value) => value!.isEmpty ? translations.lastNameInitialEmptyError : null,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<Drink>(
               value: _selectedDrink,
-              decoration: const InputDecoration(labelText: 'Preferred Drink'),
+              decoration: InputDecoration(labelText: translations.preferredDrinkLabel),
               items: Drink.values.map((Drink drink) {
                 return DropdownMenuItem<Drink>(
                   value: drink,
@@ -212,18 +213,18 @@ class _ProfileEditorState extends State<ProfileEditor> {
                   });
                 }
               },
-              validator: (value) => value == null ? 'Please select your preferred drink' : null,
+              validator: (value) => value == null ? translations.preferredDrinkEmptyError : null,
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _updateUserData,
-              child: const Text('Update Profile'),
+              child: Text(translations.updateProfileButton),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _logout,
               icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
+              label: Text(translations.logoutButton),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             ),
             const SizedBox(height: 32),
@@ -244,15 +245,15 @@ Widget _buildResetCountersButton(BuildContext context, Future<void> Function() o
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Reset Counters'),
-            content: const Text('Are you sure you want to reset all beer counters?'),
+            title: Text(translations.resetCountersTitle),
+            content: Text(translations.resetCountersConfirmation),
             actions: <Widget>[
               TextButton(
-                child: const Text('Cancel'),
+                child: Text(translations.cancel_button),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
               ElevatedButton(
-                child: const Text('Reset'),
+                child: Text(translations.resetButton),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
@@ -265,14 +266,14 @@ Widget _buildResetCountersButton(BuildContext context, Future<void> Function() o
         await onResetCounters();
         if (ScaffoldMessenger.of(context).mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Counters have been reset.'),
+            SnackBar(
+              content: Text(translations.countersResetSuccess),
               backgroundColor: Colors.green,
             ),
           );
         }
       }
     },
-    child: const Text('Reset All Beer Counters'),
+    child: Text(translations.resetAllCountersButton),
   );
 }

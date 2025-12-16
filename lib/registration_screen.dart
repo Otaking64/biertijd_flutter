@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 import 'name_list_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -47,11 +48,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         }
       } on FirebaseAuthException catch (e) {
         setState(() {
-          _errorMessage = e.message ?? 'An unknown error occurred.';
+          _errorMessage = e.message ?? translations.unknownError;
         });
       } catch (e) {
         setState(() {
-          _errorMessage = 'An unexpected error occurred. Please try again.';
+          _errorMessage = translations.unexpectedError;
         });
       }
     }
@@ -61,7 +62,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
+        title: Text(translations.createAccountTitle),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -73,10 +74,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: [
                 TextFormField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'First Name'),
+                  decoration: InputDecoration(labelText: translations.firstNameLabel),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your first name';
+                      return translations.firstNameEmptyError;
                     }
                     return null;
                   },
@@ -84,11 +85,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _lastNameInitialController,
-                  decoration: const InputDecoration(labelText: 'First Letter of Last Name'),
+                  decoration: InputDecoration(labelText: translations.lastNameInitialLabel),
                   maxLength: 1,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter the first letter of your last name';
+                      return translations.lastNameInitialEmptyError;
                     }
                     return null;
                   },
@@ -96,11 +97,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(labelText: translations.emailLabel),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty || !value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return translations.emailInvalidError;
                     }
                     return null;
                   },
@@ -108,11 +109,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: InputDecoration(labelText: translations.passwordLabel),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty || value.length < 6) {
-                      return 'Password must be at least 6 characters long';
+                      return translations.passwordLengthError;
                     }
                     return null;
                   },
@@ -120,7 +121,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<Drink>(
                   value: _selectedDrink,
-                  decoration: const InputDecoration(labelText: 'Preferred Drink'),
+                  decoration: InputDecoration(labelText: translations.preferredDrinkLabel),
                   items: Drink.values.map((Drink drink) {
                     return DropdownMenuItem<Drink>(
                       value: drink,
@@ -134,7 +135,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   },
                   validator: (value) {
                     if (value == null) {
-                      return 'Please select your preferred drink';
+                      return translations.preferredDrinkEmptyError;
                     }
                     return null;
                   },
@@ -151,7 +152,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ElevatedButton(
                   onPressed: _register,
-                  child: const Text('Register'),
+                  child: Text(translations.registerButton),
                 ),
               ],
             ),

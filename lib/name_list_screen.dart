@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Account_Screen.dart';
+import 'main.dart'; // Import for translations
 
 enum Drink { beer, whiskey, wine, cola }
 
@@ -15,13 +16,13 @@ extension DrinkExtension on Drink {
   String get displayName {
     switch (this) {
       case Drink.beer:
-        return 'Beer';
+        return translations.drinkBeer;
       case Drink.whiskey:
-        return 'Whiskey';
+        return translations.drinkWhiskey;
       case Drink.wine:
-        return 'Wine';
+        return translations.drinkWine;
       case Drink.cola:
-        return 'Cola';
+        return translations.drinkCola;
       default:
         return '';
     }
@@ -73,7 +74,7 @@ class NameListScreen extends StatefulWidget {
 class _NameListScreenState extends State<NameListScreen> {
   final List<Person> _localGroupMembers = [];
   String? _activeGroupId;
-  String _activeGroupName = 'Local Group (On this device)';
+  late String _activeGroupName;
 
   bool _isShowingResult = false;
   Person? _selectedPerson;
@@ -89,6 +90,7 @@ class _NameListScreenState extends State<NameListScreen> {
   @override
   void initState() {
     super.initState();
+    _activeGroupName = translations.localGroupName;
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
@@ -121,14 +123,14 @@ class _NameListScreenState extends State<NameListScreen> {
     final snapshot = await groupNameRef.get();
     setState(() {
       _activeGroupId = groupId;
-      _activeGroupName = (snapshot.value as String?) ?? 'Unnamed Group';
+      _activeGroupName = (snapshot.value as String?) ?? translations.unnamedGroup;
     });
   }
 
   void _clearActiveGroup() {
     setState(() {
       _activeGroupId = null;
-      _activeGroupName = 'Local Group (On this device)';
+      _activeGroupName = translations.localGroupName;
     });
     _loadLocalGroup();
   }
@@ -147,7 +149,7 @@ class _NameListScreenState extends State<NameListScreen> {
       final userSnapshot = await FirebaseDatabase.instance.ref('users/$uid').get();
       if (userSnapshot.exists && userSnapshot.value != null) {
         final userData = userSnapshot.value as Map<dynamic, dynamic>;
-        final firstName = userData['firstName'] ?? 'Unknown';
+        final firstName = userData['firstName'] ?? translations.unknownUser;
         final lastNameInitial = userData['lastNameInitial'] ?? '';
 
         final preferredDrink = Drink.values.firstWhere(
@@ -168,9 +170,8 @@ class _NameListScreenState extends State<NameListScreen> {
 
   void _pickRandomName() async {
     if (_activeGroupId == null) {
-      // --- Local Group: Fair Selection Logic ---
       if (_localGroupMembers.isEmpty) {
-        _showErrorSnackbar('Voeg eerst wat namen toe.');
+        _showErrorSnackbar(translations.addNamesFirstError);
         return;
       }
 
@@ -200,12 +201,11 @@ class _NameListScreenState extends State<NameListScreen> {
       _confettiController.play();
 
     } else {
-      // --- Online Group: Group-Specific Fair Selection Logic ---
       final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
       final snapshot = await membersRef.get();
 
       if (!snapshot.exists || snapshot.value == null) {
-        _showErrorSnackbar('This group has no members.');
+        _showErrorSnackbar(translations.groupHasNoMembersError);
         return;
       }
 
@@ -213,7 +213,7 @@ class _NameListScreenState extends State<NameListScreen> {
       List<Person> onlineMembers = await _fetchOnlineMemberDetails(membersData);
 
       if (onlineMembers.isEmpty) {
-        _showErrorSnackbar('Could not load any member data.');
+        _showErrorSnackbar(translations.couldNotLoadMemberDataError);
         return;
       }
 
@@ -263,7 +263,6 @@ class _NameListScreenState extends State<NameListScreen> {
 
   Future<void> _resetAllCounters() async {
     if (_activeGroupId == null) {
-      // Reset local group
       setState(() {
         for (var person in _localGroupMembers) {
           person.numberOfRounds = 0;
@@ -272,11 +271,10 @@ class _NameListScreenState extends State<NameListScreen> {
       await _saveLocalGroup();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Local counters have been reset.')),
+          SnackBar(content: Text(translations.localCountersReset)),
         );
       }
     } else {
-      // Reset online group
       final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
       final snapshot = await membersRef.get();
       if (snapshot.exists) {
@@ -288,14 +286,13 @@ class _NameListScreenState extends State<NameListScreen> {
         await membersRef.update(updates);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Group counters have been reset.')),
+            SnackBar(content: Text(translations.groupCountersReset)),
           );
         }
       }
     }
   }
 
-  // --- Navigation ---
 
   void _navigateToGroups() async {
     final result = await Navigator.of(context).pushNamed('/groups');
@@ -328,7 +325,7 @@ class _NameListScreenState extends State<NameListScreen> {
               if (_currentUser != null)
                 IconButton(
                   icon: const Icon(Icons.group),
-                  tooltip: 'Groups',
+                  tooltip: translations.groupsTooltip,
                   onPressed: _navigateToGroups,
                 ),
               PopupMenuButton<String>(
@@ -338,9 +335,9 @@ class _NameListScreenState extends State<NameListScreen> {
                   }
                 },
                 itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem<String>(
+                  PopupMenuItem<String>(
                     value: 'account',
-                    child: Text('Account & Settings'),
+                    child: Text(translations.accountAndSettings),
                   ),
                 ],
               ),
@@ -355,7 +352,7 @@ class _NameListScreenState extends State<NameListScreen> {
                 _showQrCodeDialog();
               }
             },
-            tooltip: _activeGroupId == null ? 'Naam toevoegen' : 'Show Group QR',
+            tooltip: _activeGroupId == null ? translations.add_name_tooltip : translations.showGroupQRTooltip,
             child: Icon(_activeGroupId == null ? Icons.add : Icons.qr_code),
           ),
           persistentFooterButtons: [
@@ -368,9 +365,9 @@ class _NameListScreenState extends State<NameListScreen> {
                   padding: const EdgeInsets.all(16),
                 ),
                 onPressed: _pickRandomName,
-                child: const Text(
-                  'Wie moet er bier gaan halen?',
-                  style: TextStyle(fontSize: 18),
+                child: Text(
+                  translations.pick_random_name_button,
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),
@@ -457,7 +454,7 @@ class _NameListScreenState extends State<NameListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return const Center(child: Text('This group has no members yet.'));
+          return Center(child: Text(translations.groupHasNoMembersYet));
         }
 
         final membersData = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
@@ -469,7 +466,7 @@ class _NameListScreenState extends State<NameListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (membersSnapshot.hasError || !membersSnapshot.hasData || membersSnapshot.data == null) {
-              return const Center(child: Text('Could not load member details.'));
+              return Center(child: Text(translations.couldNotLoadMemberDetailsError));
             }
 
             final onlineMembers = membersSnapshot.data!;
@@ -480,7 +477,7 @@ class _NameListScreenState extends State<NameListScreen> {
                 final member = onlineMembers[index];
                 return ListTile(
                   title: Text(member.name),
-                  subtitle: Text('Prefers: ${member.preferredDrink.displayName}'),
+                  subtitle: Text(translations.prefersDrink(member.preferredDrink.displayName)),
                   trailing: Text(member.numberOfRounds.toString(), style: const TextStyle(fontSize: 18)),
                 );
               },
@@ -518,9 +515,9 @@ class _NameListScreenState extends State<NameListScreen> {
                 style: const TextStyle(fontSize: 72, fontWeight: FontWeight.bold, color: Colors.white, decoration: TextDecoration.none),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'moet bier gaan halen',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.normal, color: Colors.white, decoration: TextDecoration.none),
+              Text(
+                translations.must_get_beer,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.normal, color: Colors.white, decoration: TextDecoration.none),
               ),
               const SizedBox(height: 48),
               if (summaryText.isNotEmpty)
@@ -545,16 +542,16 @@ class _NameListScreenState extends State<NameListScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Naam toevoegen'),
+          title: Text(translations.add_new_name_dialog_title),
           content: TextField(
             controller: nameController,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Naam'),
+            decoration: InputDecoration(labelText: translations.name_label),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annuleren'),
+              child: Text(translations.cancel_button),
             ),
             ElevatedButton(
               onPressed: () {
@@ -567,7 +564,7 @@ class _NameListScreenState extends State<NameListScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Toevoegen'),
+              child: Text(translations.add_button),
             ),
           ],
         );
@@ -576,6 +573,7 @@ class _NameListScreenState extends State<NameListScreen> {
   }
 
   void _showQrCodeDialog() {
+    if (_activeGroupId == null) return;
     showDialog(
       context: context,
       builder: (context) {
@@ -583,12 +581,10 @@ class _NameListScreenState extends State<NameListScreen> {
           content: SizedBox(
             width: 250,
             height: 250,
-            child: Center(
-              child: QrImageView(
-                data: _activeGroupId!,
-                version: QrVersions.auto,
-                size: 200.0,
-              ),
+            child: QrImageView(
+              data: 'biertijdapp://group?id=$_activeGroupId',
+              version: QrVersions.auto,
+              size: 200.0,
             ),
           ),
         );

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -16,26 +17,79 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Define the scan window size and location
+    final scanWindow = Rect.fromCenter(
+      center: MediaQuery.of(context).size.center(Offset.zero),
+      width: 250,
+      height: 250,
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan Group QR Code'),
+        title: Text(translations.scanGroupQRCodeTitle),
       ),
-      body: MobileScanner(
-        controller: _scannerController,
-        onDetect: (capture) {
-          if (_isProcessing) return;
-          setState(() {
-            _isProcessing = true;
-          });
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          MobileScanner(
+            controller: _scannerController,
+            // Use the scanWindow to focus the scanner on the center of the screen for performance
+            scanWindow: scanWindow,
+            onDetect: (capture) {
+              if (_isProcessing) return;
+              setState(() {
+                _isProcessing = true;
+              });
 
-          final List<Barcode> barcodes = capture.barcodes;
-          if (barcodes.isNotEmpty) {
-            final String? scannedGroupId = barcodes.first.rawValue;
-            if (scannedGroupId != null && scannedGroupId.isNotEmpty) {
-              _joinGroup(scannedGroupId);
-            }
-          }
-        },
+              final List<Barcode> barcodes = capture.barcodes;
+              if (barcodes.isNotEmpty) {
+                final String? scannedGroupId = barcodes.first.rawValue;
+                if (scannedGroupId != null && scannedGroupId.isNotEmpty) {
+                  _joinGroup(scannedGroupId);
+                }
+              }
+            },
+          ),
+          // This widget creates the semi-transparent overlay with a cutout
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.5),
+              BlendMode.srcOut,
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black, // The color does not matter
+                    backgroundBlendMode: BlendMode.dstOut,
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    height: scanWindow.height,
+                    width: scanWindow.width,
+                    decoration: BoxDecoration(
+                      color: Colors.white, // This color will be 'cut out'
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // This widget draws the white border around the scan window
+          Center(
+            child: Container(
+              height: scanWindow.height,
+              width: scanWindow.width,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -43,7 +97,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   Future<void> _joinGroup(String groupId) async {
     final User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      _showError('You must be logged in to join a group.');
+      _showError(translations.mustBeLoggedInToJoinGroupError);
       return;
     }
 
@@ -53,7 +107,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Successfully joined group!')),
+        SnackBar(content: Text(translations.successfullyJoinedGroupMessage)),
       );
       Navigator.of(context).pop();
     }

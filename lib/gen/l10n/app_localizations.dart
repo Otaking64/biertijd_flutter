@@ -157,6 +157,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'must get beer'**
   String get must_get_beer;
+
+  /// No description provided for @authScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication'**
+  String get authScreenTitle;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @loginButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginButton;
+
+  /// No description provided for @registerButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get registerButton;
+
+  /// No description provided for @forgotPasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPasswordButton;
+
+  /// No description provided for @continueOfflineButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without signing in'**
+  String get continueOfflineButton;
+
+  /// No description provided for @enterEmailAndPasswordMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter both email and password.'**
+  String get enterEmailAndPasswordMessage;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address below to receive a password reset link.'**
+  String get resetPasswordInstruction;
+
+  /// No description provided for @sendResetEmailButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Email'**
+  String get sendResetEmailButton;
+
+  /// No description provided for @enterEmailToResetPasswordMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email to reset your password.'**
+  String get enterEmailToResetPasswordMessage;
+
+  /// No description provided for @passwordResetEmailSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent. Please check your inbox.'**
+  String get passwordResetEmailSentMessage;
+
+  /// No description provided for @drinkBeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Beer'**
+  String get drinkBeer;
+
+  /// No description provided for @drinkWhiskey.
+  ///
+  /// In en, this message translates to:
+  /// **'Whiskey'**
+  String get drinkWhiskey;
+
+  /// No description provided for @drinkWine.
+  ///
+  /// In en, this message translates to:
+  /// **'Wine'**
+  String get drinkWine;
+
+  /// No description provided for @drinkCola.
+  ///
+  /// In en, this message translates to:
+  /// **'Cola'**
+  String get drinkCola;
+
+  /// No description provided for @localGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Group (On this device)'**
+  String get localGroupName;
+
+  /// No description provided for @unnamedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed Group'**
+  String get unnamedGroup;
+
+  /// No description provided for @unknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownUser;
+
+  /// No description provided for @addNamesFirstError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add some names first.'**
+  String get addNamesFirstError;
+
+  /// No description provided for @groupHasNoMembersError.
+  ///
+  /// In en, this message translates to:
+  /// **'This group has no members.'**
+  String get groupHasNoMembersError;
+
+  /// No description provided for @couldNotLoadMemberDataError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load any member data.'**
+  String get couldNotLoadMemberDataError;
+
+  /// No description provided for @localCountersReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Local counters have been reset.'**
+  String get localCountersReset;
+
+  /// No description provided for @groupCountersReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Group counters have been reset.'**
+  String get groupCountersReset;
+
+  /// No description provided for @groupHasNoMembersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'This group has no members yet.'**
+  String get groupHasNoMembersYet;
+
+  /// No description provided for @couldNotLoadMemberDetailsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load member details.'**
+  String get couldNotLoadMemberDetailsError;
+
+  /// No description provided for @groupsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groupsTooltip;
+
+  /// No description provided for @accountAndSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Settings'**
+  String get accountAndSettings;
+
+  /// No description provided for @showGroupQRTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Group QR'**
+  String get showGroupQRTooltip;
+
+  /// No description provided for @prefersDrink.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefers: {drinkName}'**
+  String prefersDrink(Object drinkName);
+
+  /// No description provided for @fetchBeerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'must fetch beer'**
+  String get fetchBeerMessage;
+
+  /// No description provided for @createNewGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Group'**
+  String get createNewGroupTitle;
+
+  /// No description provided for @groupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Name'**
+  String get groupNameHint;
+
+  /// No description provided for @createButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createButton;
+
+  /// No description provided for @yourGroupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Groups'**
+  String get yourGroupsTitle;
+
+  /// No description provided for @joinGroupQRTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Group via QR'**
+  String get joinGroupQRTooltip;
+
+  /// No description provided for @createAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get createAccountTitle;
+
+  /// No description provided for @firstNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'First Name'**
+  String get firstNameLabel;
+
+  /// No description provided for @firstNameEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your first name'**
+  String get firstNameEmptyError;
+
+  /// No description provided for @lastNameInitialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'First Letter of Last Name'**
+  String get lastNameInitialLabel;
+
+  /// No description provided for @lastNameInitialEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the first letter of your last name'**
+  String get lastNameInitialEmptyError;
+
+  /// No description provided for @emailInvalidError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get emailInvalidError;
+
+  /// No description provided for @passwordLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters long'**
+  String get passwordLengthError;
+
+  /// No description provided for @preferredDrinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Drink'**
+  String get preferredDrinkLabel;
+
+  /// No description provided for @preferredDrinkEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your preferred drink'**
+  String get preferredDrinkEmptyError;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unknown error occurred.'**
+  String get unknownError;
+
+  /// No description provided for @unexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again.'**
+  String get unexpectedError;
+
+  /// No description provided for @scanGroupQRCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Group QR Code'**
+  String get scanGroupQRCodeTitle;
+
+  /// No description provided for @mustBeLoggedInToJoinGroupError.
+  ///
+  /// In en, this message translates to:
+  /// **'You must be logged in to join a group.'**
+  String get mustBeLoggedInToJoinGroupError;
+
+  /// No description provided for @successfullyJoinedGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully joined group!'**
+  String get successfullyJoinedGroupMessage;
+
+  /// No description provided for @accountSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Settings'**
+  String get accountSettingsTitle;
+
+  /// No description provided for @loginOrRegisterButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Login or Register'**
+  String get loginOrRegisterButton;
+
+  /// No description provided for @loggedInAsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in as:'**
+  String get loggedInAsLabel;
+
+  /// No description provided for @noEmailProvidedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No email provided'**
+  String get noEmailProvidedLabel;
+
+  /// No description provided for @loadUserDataError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load user data: {error}'**
+  String loadUserDataError(Object error);
+
+  /// No description provided for @profileUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully!'**
+  String get profileUpdatedSuccess;
+
+  /// No description provided for @profileUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile: {error}'**
+  String profileUpdateError(Object error);
+
+  /// No description provided for @updateProfileButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Profile'**
+  String get updateProfileButton;
+
+  /// No description provided for @logoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutButton;
+
+  /// No description provided for @resetCountersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Counters'**
+  String get resetCountersTitle;
+
+  /// No description provided for @resetCountersConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset all beer counters?'**
+  String get resetCountersConfirmation;
+
+  /// No description provided for @resetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetButton;
+
+  /// No description provided for @countersResetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Counters have been reset.'**
+  String get countersResetSuccess;
+
+  /// No description provided for @resetAllCountersButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset All Beer Counters'**
+  String get resetAllCountersButton;
 }
 
 class _AppLocalizationsDelegate

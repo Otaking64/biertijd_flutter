@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
-        android:label="wie_moet_er_bier_gaan_halen"
+        android:label="wie moet er bier gaan halen"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

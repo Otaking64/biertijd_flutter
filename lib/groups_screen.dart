@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 import 'package:wie_moet_er_bier_gaan_halen/qr_scanner_screen.dart';
 
 class Group {
@@ -28,22 +29,22 @@ class _GroupsScreenState extends State<GroupsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Create New Group'),
+          title: Text(translations.createNewGroupTitle),
           content: TextField(
             controller: _groupNameController,
-            decoration: const InputDecoration(hintText: "Group Name"),
+            decoration: InputDecoration(hintText: translations.groupNameHint),
             autofocus: true,
           ),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(translations.cancel_button),
               onPressed: () {
                 _groupNameController.clear();
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Create'),
+              child: Text(translations.createButton),
               onPressed: () {
                 _createGroup();
                 _groupNameController.clear();
@@ -100,7 +101,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
         final groupData = groupSnapshot.value as Map<dynamic, dynamic>;
         return Group(
           id: groupId,
-          name: groupData['name'] ?? 'Unnamed Group',
+          name: groupData['name'] ?? translations.unnamedGroup,
           lastUpdated: groupData['lastUpdated'] as int? ?? 0,
         );
       }
@@ -127,12 +128,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Groups'),
+        title: Text(translations.yourGroupsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: _navigateToScanner,
-            tooltip: 'Join Group via QR',
+            tooltip: translations.joinGroupQRTooltip,
           ),
         ],
       ),
@@ -179,7 +180,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
           return Card(
             child: ListTile(
               leading: const Icon(Icons.phone_android),
-              title: const Text('Local Group (On this device)'),
+              title: Text(translations.localGroupName),
               onTap: () {
                 Navigator.of(context).pop(null);
               },

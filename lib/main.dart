@@ -4,15 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wie_moet_er_bier_gaan_halen/authentication_screen.dart';
 import 'package:wie_moet_er_bier_gaan_halen/groups_screen.dart';
 import 'package:wie_moet_er_bier_gaan_halen/registration_screen.dart';
+import 'gen/l10n/app_localizations.dart';
 import 'name_list_screen.dart';
 import 'firebase_options.dart';
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+AppLocalizations get translations => AppLocalizations.of(navigatorKey.currentContext!)!;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform.copyWith(
-      databaseURL: "https://biertijdapp.firebaseio.com",
-    ),
+    options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const AppEntry());
 }
@@ -70,6 +71,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       title: 'Biertijd App',
       theme: ThemeData(
         useMaterial3: true,
