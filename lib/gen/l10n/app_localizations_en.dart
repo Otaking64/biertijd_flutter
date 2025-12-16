@@ -247,4 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetAllCountersButton => 'Reset Local Beer Counters';
+
+  @override
+  String get appTitle => 'Who has to go get beer?';
 }

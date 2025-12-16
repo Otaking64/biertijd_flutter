@@ -250,4 +250,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get resetAllCountersButton => 'Lokale Biertellers Resetten';
+
+  @override
+  String get appTitle => 'Wie moet er bier gaan halen?';
 }

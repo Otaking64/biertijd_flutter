@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      title: 'Biertijd App',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/auth': (context) => const AuthenticationScreen(),
         '/home': (context) => const NameListScreen(),
-        '/register': (context) => const RegistrationScreen(),
+        '/register': (subcontext) => const RegistrationScreen(),
         '/groups': (context) => const GroupsScreen(),
       },
     );

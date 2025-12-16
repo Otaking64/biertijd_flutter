@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wie_moet_er_bier_gaan_halen/main.dart';
 import 'package:wie_moet_er_bier_gaan_halen/name_list_screen.dart';
@@ -186,14 +187,20 @@ class _ProfileEditorState extends State<ProfileEditor> {
             const SizedBox(height: 24),
             TextFormField(
               controller: _firstNameController,
-              decoration: InputDecoration(labelText: translations.firstNameLabel),
+              decoration: InputDecoration(labelText: translations.firstNameLabel, counterText: ""),
+              maxLength: 15,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+                _TitleCaseInputFormatter(),
+              ],
               validator: (value) => value!.isEmpty ? translations.firstNameEmptyError : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _lastNameInitialController,
-              decoration: InputDecoration(labelText: translations.lastNameInitialLabel),
+              decoration: InputDecoration(labelText: translations.lastNameInitialLabel, counterText: ""),
               maxLength: 1,
+              textCapitalization: TextCapitalization.characters,
               validator: (value) => value!.isEmpty ? translations.lastNameInitialEmptyError : null,
             ),
             const SizedBox(height: 16),
@@ -234,6 +241,19 @@ class _ProfileEditorState extends State<ProfileEditor> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TitleCaseInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+    return TextEditingValue(
+      text: newValue.text.substring(0, 1).toUpperCase() + newValue.text.substring(1),
+      selection: newValue.selection,
     );
   }
 }

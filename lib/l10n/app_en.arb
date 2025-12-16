@@ -77,5 +77,6 @@
   "resetCountersConfirmation": "Are you sure you want to reset the local beer counters?",
   "resetButton": "Reset",
   "countersResetSuccess": "Counters have been reset.",
-  "resetAllCountersButton": "Reset Local Beer Counters"
+  "resetAllCountersButton": "Reset Local Beer Counters",
+  "appTitle": "Who has to go get beer?"
 }

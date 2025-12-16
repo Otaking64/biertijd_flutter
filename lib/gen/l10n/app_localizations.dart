@@ -547,6 +547,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset Local Beer Counters'**
   String get resetAllCountersButton;
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who has to go get beer?'**
+  String get appTitle;
 }
 
 class _AppLocalizationsDelegate

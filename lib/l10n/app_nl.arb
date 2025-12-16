@@ -74,5 +74,6 @@
   "resetCountersConfirmation": "Weet u zeker dat u de lokale biertellers wilt resetten?",
   "resetButton": "Resetten",
   "countersResetSuccess": "Tellers zijn gereset.",
-  "resetAllCountersButton": "Lokale Biertellers Resetten"
+  "resetAllCountersButton": "Lokale Biertellers Resetten",
+  "appTitle": "Wie moet er bier gaan halen?"
 }

@@ -484,58 +484,65 @@ class _NameListScreenState extends State<NameListScreen> {
     final displayName = _selectedOnlineUserName ?? _selectedPerson?.name ?? "";
     final summaryText = _formatDrinkSummary();
 
-    return Container(
-      color: Colors.black.withOpacity(0.85),
-      child: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  displayName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 72,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      decoration: TextDecoration.none),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  translations.must_get_beer,
-                  style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.white,
-                      decoration: TextDecoration.none),
-                ),
-                const SizedBox(height: 48),
-                if (summaryText.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Text(
-                      summaryText,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.white,
-                          decoration: TextDecoration.none),
-                    ),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _hideResult();
+      },
+      child: Container(
+        color: Colors.black.withOpacity(0.85),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    displayName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        decoration: TextDecoration.none),
                   ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    translations.must_get_beer,
+                    style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.white,
+                        decoration: TextDecoration.none),
+                  ),
+                  const SizedBox(height: 48),
+                  if (summaryText.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Text(
+                        summaryText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                            decoration: TextDecoration.none),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Positioned(
-            top: 40,
-            right: 16,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 32),
-              onPressed: _hideResult,
+            Positioned(
+              top: 40,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                onPressed: _hideResult,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
