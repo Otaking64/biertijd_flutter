@@ -527,7 +527,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetCountersConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to reset all beer counters?'**
+  /// **'Are you sure you want to reset the local beer counters?'**
   String get resetCountersConfirmation;
 
   /// No description provided for @resetButton.
@@ -545,7 +545,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetAllCountersButton.
   ///
   /// In en, this message translates to:
-  /// **'Reset All Beer Counters'**
+  /// **'Reset Local Beer Counters'**
   String get resetAllCountersButton;
 }
 

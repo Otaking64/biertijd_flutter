@@ -261,35 +261,17 @@ class _NameListScreenState extends State<NameListScreen> {
     );
   }
 
-  Future<void> _resetAllCounters() async {
-    if (_activeGroupId == null) {
-      setState(() {
-        for (var person in _localGroupMembers) {
-          person.numberOfRounds = 0;
-        }
-      });
-      await _saveLocalGroup();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(translations.localCountersReset)),
-        );
+  Future<void> _resetLocalCounters() async {
+    setState(() {
+      for (var person in _localGroupMembers) {
+        person.numberOfRounds = 0;
       }
-    } else {
-      final membersRef = FirebaseDatabase.instance.ref('groups/$_activeGroupId/members');
-      final snapshot = await membersRef.get();
-      if (snapshot.exists) {
-        final updates = <String, dynamic>{};
-        final members = snapshot.value as Map<dynamic, dynamic>;
-        for (final uid in members.keys) {
-          updates['$uid/numberOfRounds'] = 0;
-        }
-        await membersRef.update(updates);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(translations.groupCountersReset)),
-          );
-        }
-      }
+    });
+    await _saveLocalGroup();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(translations.localCountersReset)),
+      );
     }
   }
 
@@ -308,7 +290,8 @@ class _NameListScreenState extends State<NameListScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AccountScreen(
-          onResetCounters: _resetAllCounters,
+          // Now always passes the safe, local-only reset function.
+          onResetCounters: _resetLocalCounters,
         ),
       ),
     );

@@ -240,7 +240,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get resetCountersConfirmation =>
-      'Weet u zeker dat u alle biertellers wilt resetten?';
+      'Weet u zeker dat u de lokale biertellers wilt resetten?';
 
   @override
   String get resetButton => 'Resetten';
@@ -249,5 +249,5 @@ class AppLocalizationsNl extends AppLocalizations {
   String get countersResetSuccess => 'Tellers zijn gereset.';
 
   @override
-  String get resetAllCountersButton => 'Alle Biertellers Resetten';
+  String get resetAllCountersButton => 'Lokale Biertellers Resetten';
 }

@@ -17,7 +17,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Define the scan window size and location
     final scanWindow = Rect.fromCenter(
       center: MediaQuery.of(context).size.center(Offset.zero),
       width: 250,
@@ -33,7 +32,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         children: [
           MobileScanner(
             controller: _scannerController,
-            // Use the scanWindow to focus the scanner on the center of the screen for performance
             scanWindow: scanWindow,
             onDetect: (capture) {
               if (_isProcessing) return;
@@ -50,7 +48,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               }
             },
           ),
-          // This widget creates the semi-transparent overlay with a cutout
           ColorFiltered(
             colorFilter: ColorFilter.mode(
               Colors.black.withOpacity(0.5),
@@ -61,7 +58,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               children: [
                 Container(
                   decoration: const BoxDecoration(
-                    color: Colors.black, // The color does not matter
+                    color: Colors.black,
                     backgroundBlendMode: BlendMode.dstOut,
                   ),
                 ),
@@ -70,7 +67,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     height: scanWindow.height,
                     width: scanWindow.width,
                     decoration: BoxDecoration(
-                      color: Colors.white, // This color will be 'cut out'
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -78,7 +75,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               ],
             ),
           ),
-          // This widget draws the white border around the scan window
           Center(
             child: Container(
               height: scanWindow.height,

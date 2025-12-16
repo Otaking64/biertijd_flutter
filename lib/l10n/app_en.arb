@@ -74,8 +74,8 @@
   "updateProfileButton": "Update Profile",
   "logoutButton": "Logout",
   "resetCountersTitle": "Reset Counters",
-  "resetCountersConfirmation": "Are you sure you want to reset all beer counters?",
+  "resetCountersConfirmation": "Are you sure you want to reset the local beer counters?",
   "resetButton": "Reset",
   "countersResetSuccess": "Counters have been reset.",
-  "resetAllCountersButton": "Reset All Beer Counters"
+  "resetAllCountersButton": "Reset Local Beer Counters"
 }

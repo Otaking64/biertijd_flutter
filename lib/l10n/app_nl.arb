@@ -71,8 +71,8 @@
   "updateProfileButton": "Profiel bijwerken",
   "logoutButton": "Uitloggen",
   "resetCountersTitle": "Tellers resetten",
-  "resetCountersConfirmation": "Weet u zeker dat u alle biertellers wilt resetten?",
+  "resetCountersConfirmation": "Weet u zeker dat u de lokale biertellers wilt resetten?",
   "resetButton": "Resetten",
   "countersResetSuccess": "Tellers zijn gereset.",
-  "resetAllCountersButton": "Alle Biertellers Resetten"
+  "resetAllCountersButton": "Lokale Biertellers Resetten"
 }
