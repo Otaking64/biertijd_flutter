@@ -12,7 +12,7 @@ You can also use this app in online mode, where you can create a room and invite
 When everyone joined the room, you can let the app decide who goes to get the beers!
 
 
-Note:
+## Note:
 To compile your own version of this app you would need to add firebase configuration files to the project.
 For android this is the `google-services.json` file and for iOS this is the `GoogleService-Info.plist` file.
 You can get these files by creating a firebase project and adding android and/or iOS apps to the project.
