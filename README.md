@@ -10,3 +10,10 @@ When you need to decide who goes to get the beers, just open the app and let it 
 # online mode
 You can also use this app in online mode, where you can create a room and invite your friends to join.
 When everyone joined the room, you can let the app decide who goes to get the beers!
+
+
+Note:
+To compile your own version of this app you would need to add firebase configuration files to the project.
+For android this is the `google-services.json` file and for iOS this is the `GoogleService-Info.plist` file.
+You can get these files by creating a firebase project and adding android and/or iOS apps to the project.
+Make sure to enable Firestore in the firebase console. The project depends on Firebase Core, Firebase Realtime Database and Firebase authentication.
