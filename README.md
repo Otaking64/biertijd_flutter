@@ -17,3 +17,5 @@ To compile your own version of this app you would need to add firebase configura
 For android this is the `google-services.json` file and for iOS this is the `GoogleService-Info.plist` file.
 You can get these files by creating a firebase project and adding android and/or iOS apps to the project.
 Make sure to enable Firestore in the firebase console. The project depends on Firebase Core, Firebase Realtime Database and Firebase authentication.
+
+<img width="360" height="780" alt="share_3003419822303320924" src="https://github.com/user-attachments/assets/7f43a344-4eea-4619-9316-0da5616c83b8" />
