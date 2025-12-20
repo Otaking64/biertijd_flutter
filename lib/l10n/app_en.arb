@@ -78,5 +78,13 @@
   "resetButton": "Reset",
   "countersResetSuccess": "Counters have been reset.",
   "resetAllCountersButton": "Reset Local Beer Counters",
-  "appTitle": "Who has to go get beer?"
+  "appTitle": "Who has to go get beer?",
+  "deleteAccountButton": "Delete Account",
+  "deleteAccountTitle": "Delete Account?",
+  "deleteAccountConfirmation": "Are you sure you want to delete your account? This action is permanent and will delete all your data.",
+  "deleteButton": "Delete",
+  "reauthenticateTitle": "Re-authentication Required",
+  "reauthenticateInstruction": "For security reasons, please log in again before deleting your account.",
+  "accountDeletedSuccess": "Account deleted successfully.",
+  "accountDeleteError": "Failed to delete account: {error}"
 }

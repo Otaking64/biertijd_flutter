@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -85,7 +86,9 @@ class _NameListScreenState extends State<NameListScreen> {
   String? _lastSelectedOnlineUid;
 
   late ConfettiController _confettiController;
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  StreamSubscription<User?>? _authSubscription;
+  
+  User? get _currentUser => FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -95,11 +98,17 @@ class _NameListScreenState extends State<NameListScreen> {
       duration: const Duration(seconds: 1),
     );
     _loadLocalGroup();
+    
+    // Listen for auth changes to update the UI (like groups icon)
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _confettiController.dispose();
+    _authSubscription?.cancel();
     super.dispose();
   }
 
@@ -290,7 +299,6 @@ class _NameListScreenState extends State<NameListScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AccountScreen(
-          // Now always passes the safe, local-only reset function.
           onResetCounters: _resetLocalCounters,
         ),
       ),
@@ -414,7 +422,7 @@ class _NameListScreenState extends State<NameListScreen> {
               const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: isCurrentUser ? null : () {
+                onPressed: (person.uid != null && isCurrentUser) ? null : () {
                   setState(() {
                     _localGroupMembers.removeAt(index);
                   });

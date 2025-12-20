@@ -159,8 +159,104 @@ class _ProfileEditorState extends State<ProfileEditor> {
 
     await FirebaseAuth.instance.signOut();
 
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/auth');
+    // Use global navigator key to ensure we always redirect correctly
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/auth', (route) => false);
+  }
+
+  Future<void> _deleteAccount() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(translations.deleteAccountTitle),
+        content: Text(translations.deleteAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(translations.cancel_button),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(translations.deleteButton),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      setState(() => _isLoading = true);
+      final String uid = widget.user.uid;
+
+      // 1. Cleanup groups
+      final userGroupsSnapshot = await _database.ref('users/$uid/groups').get();
+      if (userGroupsSnapshot.exists) {
+        final groups = userGroupsSnapshot.value as Map<dynamic, dynamic>;
+        for (var groupId in groups.keys) {
+          await _database.ref('groups/$groupId/members/$uid').remove();
+        }
+      }
+
+      // 2. Delete user data
+      await _database.ref('users/$uid').remove();
+
+      // 3. Delete from Firebase Auth
+      await widget.user.delete();
+
+      // 4. Reset local state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('active_group', 'local');
+
+      // 5. Redirection
+      // We use the global navigatorKey because as soon as 'widget.user.delete()' completes, 
+      // the StreamBuilder in AccountScreen will unmount this ProfileEditor widget, 
+      // meaning 'mounted' will be false and 'context' will be invalid.
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/auth', (route) => false);
+      
+      // Try to show success message via context before it's gone, or skip if unmounted
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(translations.accountDeletedSuccess), backgroundColor: Colors.green),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(translations.reauthenticateTitle),
+              content: Text(translations.reauthenticateInstruction),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _logout();
+                  },
+                  child: Text(translations.loginButton),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(translations.accountDeleteError(e.message ?? e.code)), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(translations.accountDeleteError(e.toString())), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -232,7 +328,14 @@ class _ProfileEditorState extends State<ProfileEditor> {
               onPressed: _logout,
               icon: const Icon(Icons.logout),
               label: Text(translations.logoutButton),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: _deleteAccount,
+              icon: const Icon(Icons.delete_forever),
+              label: Text(translations.deleteAccountButton),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
             ),
             const SizedBox(height: 32),
             const Divider(),
@@ -272,9 +375,8 @@ Widget _buildResetCountersButton(BuildContext context, Future<void> Function() o
                 child: Text(translations.cancel_button),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
-              ElevatedButton(
+              TextButton(
                 child: Text(translations.resetButton),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -284,16 +386,9 @@ Widget _buildResetCountersButton(BuildContext context, Future<void> Function() o
 
       if (shouldReset == true) {
         await onResetCounters();
-        if (ScaffoldMessenger.of(context).mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(translations.countersResetSuccess),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
       }
     },
+    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
     child: Text(translations.resetAllCountersButton),
   );
 }

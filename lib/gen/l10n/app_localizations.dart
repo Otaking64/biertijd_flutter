@@ -553,6 +553,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Who has to go get beer?'**
   String get appTitle;
+
+  /// No description provided for @deleteAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountButton;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account? This action is permanent and will delete all your data.'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @deleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButton;
+
+  /// No description provided for @reauthenticateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-authentication Required'**
+  String get reauthenticateTitle;
+
+  /// No description provided for @reauthenticateInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'For security reasons, please log in again before deleting your account.'**
+  String get reauthenticateInstruction;
+
+  /// No description provided for @accountDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully.'**
+  String get accountDeletedSuccess;
+
+  /// No description provided for @accountDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account: {error}'**
+  String accountDeleteError(Object error);
 }
 
 class _AppLocalizationsDelegate

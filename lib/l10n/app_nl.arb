@@ -75,5 +75,13 @@
   "resetButton": "Resetten",
   "countersResetSuccess": "Tellers zijn gereset.",
   "resetAllCountersButton": "Lokale Biertellers Resetten",
-  "appTitle": "Wie moet er bier gaan halen?"
+  "appTitle": "Wie moet er bier gaan halen?",
+  "deleteAccountButton": "Account Verwijderen",
+  "deleteAccountTitle": "Account Verwijderen?",
+  "deleteAccountConfirmation": "Weet u zeker dat u uw account wilt verwijderen? Deze actie is permanent en verwijdert al uw gegevens.",
+  "deleteButton": "Verwijderen",
+  "reauthenticateTitle": "Opnieuw inloggen vereist",
+  "reauthenticateInstruction": "Om veiligheidsredenen moet u opnieuw inloggen voordat u uw account kunt verwijderen.",
+  "accountDeletedSuccess": "Account succesvol verwijderd.",
+  "accountDeleteError": "Account verwijderen mislukt: {error}"
 }

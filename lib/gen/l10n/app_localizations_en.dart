@@ -250,4 +250,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTitle => 'Who has to go get beer?';
+
+  @override
+  String get deleteAccountButton => 'Delete Account';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Are you sure you want to delete your account? This action is permanent and will delete all your data.';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get reauthenticateTitle => 'Re-authentication Required';
+
+  @override
+  String get reauthenticateInstruction =>
+      'For security reasons, please log in again before deleting your account.';
+
+  @override
+  String get accountDeletedSuccess => 'Account deleted successfully.';
+
+  @override
+  String accountDeleteError(Object error) {
+    return 'Failed to delete account: $error';
+  }
 }

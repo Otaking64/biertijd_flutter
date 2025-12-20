@@ -253,4 +253,32 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get appTitle => 'Wie moet er bier gaan halen?';
+
+  @override
+  String get deleteAccountButton => 'Account Verwijderen';
+
+  @override
+  String get deleteAccountTitle => 'Account Verwijderen?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Weet u zeker dat u uw account wilt verwijderen? Deze actie is permanent en verwijdert al uw gegevens.';
+
+  @override
+  String get deleteButton => 'Verwijderen';
+
+  @override
+  String get reauthenticateTitle => 'Opnieuw inloggen vereist';
+
+  @override
+  String get reauthenticateInstruction =>
+      'Om veiligheidsredenen moet u opnieuw inloggen voordat u uw account kunt verwijderen.';
+
+  @override
+  String get accountDeletedSuccess => 'Account succesvol verwijderd.';
+
+  @override
+  String accountDeleteError(Object error) {
+    return 'Account verwijderen mislukt: $error';
+  }
 }
