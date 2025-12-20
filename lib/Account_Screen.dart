@@ -159,7 +159,6 @@ class _ProfileEditorState extends State<ProfileEditor> {
 
     await FirebaseAuth.instance.signOut();
 
-    // Use global navigator key to ensure we always redirect correctly
     navigatorKey.currentState?.pushNamedAndRemoveUntil('/auth', (route) => false);
   }
 
@@ -189,7 +188,6 @@ class _ProfileEditorState extends State<ProfileEditor> {
       setState(() => _isLoading = true);
       final String uid = widget.user.uid;
 
-      // 1. Cleanup groups
       final userGroupsSnapshot = await _database.ref('users/$uid/groups').get();
       if (userGroupsSnapshot.exists) {
         final groups = userGroupsSnapshot.value as Map<dynamic, dynamic>;
@@ -198,23 +196,12 @@ class _ProfileEditorState extends State<ProfileEditor> {
         }
       }
 
-      // 2. Delete user data
       await _database.ref('users/$uid').remove();
-
-      // 3. Delete from Firebase Auth
       await widget.user.delete();
-
-      // 4. Reset local state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('active_group', 'local');
-
-      // 5. Redirection
-      // We use the global navigatorKey because as soon as 'widget.user.delete()' completes, 
-      // the StreamBuilder in AccountScreen will unmount this ProfileEditor widget, 
-      // meaning 'mounted' will be false and 'context' will be invalid.
       navigatorKey.currentState?.pushNamedAndRemoveUntil('/auth', (route) => false);
       
-      // Try to show success message via context before it's gone, or skip if unmounted
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(translations.accountDeletedSuccess), backgroundColor: Colors.green),
@@ -306,7 +293,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               items: Drink.values.map((Drink drink) {
                 return DropdownMenuItem<Drink>(
                   value: drink,
-                  child: Text(drink.displayName),
+                  child: Text('${drink.drinkEmoji} ${drink.displayName}'),
                 );
               }).toList(),
               onChanged: (Drink? newValue) {
@@ -328,7 +315,10 @@ class _ProfileEditorState extends State<ProfileEditor> {
               onPressed: _logout,
               icon: const Icon(Icons.logout),
               label: Text(translations.logoutButton),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
             ),
             const SizedBox(height: 16),
             TextButton.icon(

@@ -28,6 +28,19 @@ extension DrinkExtension on Drink {
         return '';
     }
   }
+
+  String get drinkEmoji {
+    switch (this) {
+      case Drink.beer:
+        return '🍺';
+      case Drink.whiskey:
+        return '🥃';
+      case Drink.wine:
+        return '🍷';
+      case Drink.cola:
+        return '🥤';
+    }
+  }
 }
 
 class Person {
@@ -80,6 +93,7 @@ class _NameListScreenState extends State<NameListScreen> {
   bool _isShowingResult = false;
   Person? _selectedPerson;
   String? _selectedOnlineUserName;
+  Drink? _selectedOnlineUserDrink;
   Map<Drink, int> _drinkSummary = {};
 
   Person? _lastSelectedLocalPerson;
@@ -203,6 +217,7 @@ class _NameListScreenState extends State<NameListScreen> {
         _selectedPerson = selectedPerson;
         _lastSelectedLocalPerson = selectedPerson;
         _selectedOnlineUserName = null;
+        _selectedOnlineUserDrink = null;
         _isShowingResult = true;
         _drinkSummary = summary;
       });
@@ -248,6 +263,7 @@ class _NameListScreenState extends State<NameListScreen> {
       setState(() {
         _selectedPerson = null;
         _selectedOnlineUserName = winner.name;
+        _selectedOnlineUserDrink = winner.preferredDrink;
         _lastSelectedOnlineUid = winner.uid;
         _isShowingResult = true;
         _drinkSummary = summary;
@@ -396,6 +412,7 @@ class _NameListScreenState extends State<NameListScreen> {
         final person = _localGroupMembers[index];
         final isCurrentUser = _currentUser?.uid == person.uid;
         return ListTile(
+          leading: Text(person.preferredDrink.drinkEmoji, style: const TextStyle(fontSize: 24)),
           title: Text(person.name),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -413,7 +430,7 @@ class _NameListScreenState extends State<NameListScreen> {
                 items: Drink.values.map((Drink value) {
                   return DropdownMenuItem<Drink>(
                     value: value,
-                    child: Text(value.displayName),
+                    child: Text('${value.drinkEmoji} ${value.displayName}'),
                   );
                 }).toList(),
               ),
@@ -467,6 +484,7 @@ class _NameListScreenState extends State<NameListScreen> {
               itemBuilder: (context, index) {
                 final member = onlineMembers[index];
                 return ListTile(
+                  leading: Text(member.preferredDrink.drinkEmoji, style: const TextStyle(fontSize: 24)),
                   title: Text(member.name),
                   subtitle: Text(translations.prefersDrink(member.preferredDrink.displayName)),
                   trailing: Text(member.numberOfRounds.toString(), style: const TextStyle(fontSize: 18)),
@@ -490,6 +508,7 @@ class _NameListScreenState extends State<NameListScreen> {
 
   Widget _buildResultOverlay() {
     final displayName = _selectedOnlineUserName ?? _selectedPerson?.name ?? "";
+    final displayEmoji = _selectedOnlineUserDrink?.drinkEmoji ?? _selectedPerson?.preferredDrink.drinkEmoji ?? "";
     final summaryText = _formatDrinkSummary();
 
     return PopScope(
@@ -507,10 +526,10 @@ class _NameListScreenState extends State<NameListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    displayName,
+                    '$displayEmoji $displayName',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        fontSize: 72,
+                        fontSize: 64,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         decoration: TextDecoration.none),
