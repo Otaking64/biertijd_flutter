@@ -1,4 +1,4 @@
-# wie_moet_er_bier_gaan_halen
+# wie moet er bier gaan halen?
 
 A fair way to decide who goes to get the beers!
 
