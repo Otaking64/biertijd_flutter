@@ -88,5 +88,8 @@
   "accountDeletedSuccess": "Account deleted successfully.",
   "accountDeleteError": "Failed to delete account: {error}",
   "groupDoesNotExistError": "This group does not exist.",
-  "shareUrlLabel": "Share Group"
+  "shareUrlLabel": "Share Group",
+  "drinkCustom": "Custom",
+  "customDrinkLabel": "Custom Drink Name",
+  "customDrinkHelper": "Letters, numbers, spaces, dots and % only, max 15 characters"
 }

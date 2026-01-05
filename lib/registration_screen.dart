@@ -122,7 +122,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 DropdownButtonFormField<Drink>(
                   value: _selectedDrink,
                   decoration: InputDecoration(labelText: translations.preferredDrinkLabel),
-                  items: Drink.values.map((Drink drink) {
+                  items: Drink.values
+                      .where((drink) => drink != Drink.custom)
+                      .map((Drink drink) {
                     return DropdownMenuItem<Drink>(
                       value: drink,
                       child: Text(drink.displayName),

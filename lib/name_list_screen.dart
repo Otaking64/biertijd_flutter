@@ -12,7 +12,9 @@ import 'package:share_plus/share_plus.dart';
 import 'Account_Screen.dart';
 import 'main.dart'; // Import for translations
 
-enum Drink { beer, whiskey, wine, cola }
+enum Drink { beer, whiskey, wine, cola, custom }
+
+String? currentUserCustomDrink;
 
 extension DrinkExtension on Drink {
   String get displayName {
@@ -25,9 +27,16 @@ extension DrinkExtension on Drink {
         return translations.drinkWine;
       case Drink.cola:
         return translations.drinkCola;
-      default:
-        return '';
+      case Drink.custom:
+        return currentUserCustomDrink ?? translations.drinkCustom;
     }
+  }
+
+  String getDisplayNameWithCustom(String? customDrinkName) {
+    if (this == Drink.custom && customDrinkName != null && customDrinkName.isNotEmpty) {
+      return customDrinkName;
+    }
+    return displayName;
   }
 
   String get drinkEmoji {
@@ -40,6 +49,8 @@ extension DrinkExtension on Drink {
         return '🍷';
       case Drink.cola:
         return '🥤';
+      case Drink.custom:
+        return '🍹';
     }
   }
 }
@@ -49,13 +60,22 @@ class Person {
   int numberOfRounds;
   Drink preferredDrink;
   String? uid;
+  String? customDrinkName;
 
   Person({
     required this.name,
     this.numberOfRounds = 0,
     this.preferredDrink = Drink.beer,
     this.uid,
+    this.customDrinkName,
   });
+
+  String get drinkDisplayName {
+    if (preferredDrink == Drink.custom && customDrinkName != null && customDrinkName!.isNotEmpty) {
+      return customDrinkName!;
+    }
+    return preferredDrink.displayName;
+  }
 
   factory Person.fromJson(Map<String, dynamic> json) {
     return Person(
@@ -66,6 +86,7 @@ class Person {
         orElse: () => Drink.beer,
       ),
       uid: json['uid'],
+      customDrinkName: json['customDrinkName'],
     );
   }
 
@@ -75,6 +96,7 @@ class Person {
       'numberOfRounds': numberOfRounds,
       'preferredDrink': preferredDrink.toString(),
       'uid': uid,
+      'customDrinkName': customDrinkName,
     };
   }
 }
@@ -95,7 +117,7 @@ class _NameListScreenState extends State<NameListScreen> {
   Person? _selectedPerson;
   String? _selectedOnlineUserName;
   Drink? _selectedOnlineUserDrink;
-  Map<Drink, int> _drinkSummary = {};
+  Map<String, int> _drinkSummary = {};
 
   Person? _lastSelectedLocalPerson;
   String? _lastSelectedOnlineUid;
@@ -175,6 +197,7 @@ class _NameListScreenState extends State<NameListScreen> {
         final userData = userSnapshot.value as Map<dynamic, dynamic>;
         final firstName = userData['firstName'] ?? translations.unknownUser;
         final lastNameInitial = userData['lastNameInitial'] ?? '';
+        final customDrink = userData['customDrink'] as String?;
 
         final preferredDrink = Drink.values.firstWhere(
               (e) => e.toString() == userData['preferredDrink'],
@@ -186,6 +209,7 @@ class _NameListScreenState extends State<NameListScreen> {
           name: '$firstName ${lastNameInitial.isNotEmpty ? '$lastNameInitial.' : ''}'.trim(),
           numberOfRounds: numberOfRounds,
           preferredDrink: preferredDrink,
+          customDrinkName: customDrink,
         ));
       }
     }
@@ -199,9 +223,10 @@ class _NameListScreenState extends State<NameListScreen> {
         return;
       }
 
-      final summary = <Drink, int>{};
+      final summary = <String, int>{};
       for (final person in _localGroupMembers) {
-        summary[person.preferredDrink] = (summary[person.preferredDrink] ?? 0) + 1;
+        final drinkName = person.drinkDisplayName;
+        summary[drinkName] = (summary[drinkName] ?? 0) + 1;
       }
 
       final minRounds = _localGroupMembers.map((p) => p.numberOfRounds).reduce(min);
@@ -242,9 +267,10 @@ class _NameListScreenState extends State<NameListScreen> {
         return;
       }
 
-      final summary = <Drink, int>{};
+      final summary = <String, int>{};
       for (final person in onlineMembers) {
-        summary[person.preferredDrink] = (summary[person.preferredDrink] ?? 0) + 1;
+        final drinkName = person.drinkDisplayName;
+        summary[drinkName] = (summary[drinkName] ?? 0) + 1;
       }
 
       final minRounds = onlineMembers.map((p) => p.numberOfRounds).reduce(min);
@@ -487,7 +513,7 @@ class _NameListScreenState extends State<NameListScreen> {
                 return ListTile(
                   leading: Text(member.preferredDrink.drinkEmoji, style: const TextStyle(fontSize: 24)),
                   title: Text(member.name),
-                  subtitle: Text(translations.prefersDrink(member.preferredDrink.displayName)),
+                  subtitle: Text(translations.prefersDrink(member.drinkDisplayName)),
                   trailing: Text(member.numberOfRounds.toString(), style: const TextStyle(fontSize: 18)),
                 );
               },
@@ -503,7 +529,7 @@ class _NameListScreenState extends State<NameListScreen> {
       return '';
     }
     return _drinkSummary.entries
-        .map((entry) => '${entry.value}x ${entry.key.displayName}')
+        .map((entry) => '${entry.value}x ${entry.key}')
         .join('  •  ');
   }
 

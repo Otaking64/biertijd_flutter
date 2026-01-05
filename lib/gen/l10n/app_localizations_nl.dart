@@ -287,4 +287,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get shareUrlLabel => 'Deel Groep';
+
+  @override
+  String get drinkCustom => 'Aangepast';
+
+  @override
+  String get customDrinkLabel => 'Aangepaste Dranknaam';
+
+  @override
+  String get customDrinkHelper =>
+      'Alleen letters, cijfers, spaties, punten en %, max 15 tekens';
 }

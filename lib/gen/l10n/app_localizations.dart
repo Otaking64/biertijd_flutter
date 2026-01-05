@@ -613,6 +613,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share Group'**
   String get shareUrlLabel;
+
+  /// No description provided for @drinkCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get drinkCustom;
+
+  /// No description provided for @customDrinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Drink Name'**
+  String get customDrinkLabel;
+
+  /// No description provided for @customDrinkHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters, numbers, spaces, dots and % only, max 15 characters'**
+  String get customDrinkHelper;
 }
 
 class _AppLocalizationsDelegate

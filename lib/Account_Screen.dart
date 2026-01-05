@@ -80,6 +80,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
 
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameInitialController;
+  late TextEditingController _customDrinkController;
   Drink? _selectedDrink;
   bool _isLoading = true;
 
@@ -88,6 +89,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
     super.initState();
     _firstNameController = TextEditingController();
     _lastNameInitialController = TextEditingController();
+    _customDrinkController = TextEditingController();
     _loadUserData();
   }
 
@@ -95,6 +97,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameInitialController.dispose();
+    _customDrinkController.dispose();
     super.dispose();
   }
 
@@ -104,14 +107,23 @@ class _ProfileEditorState extends State<ProfileEditor> {
       final snapshot = await ref.get();
       if (mounted && snapshot.exists) {
         final data = Map<String, dynamic>.from(snapshot.value as Map);
+        final customDrink = data['customDrink'] as String? ?? '';
+        final drinkString = data['preferredDrink'];
+        var selectedDrink = Drink.values.firstWhere(
+              (e) => e.toString() == drinkString,
+          orElse: () => Drink.beer,
+        );
+
+        if (selectedDrink == Drink.custom && customDrink.trim().isEmpty) {
+          selectedDrink = Drink.beer;
+        }
+
         setState(() {
           _firstNameController.text = data['firstName'] ?? '';
           _lastNameInitialController.text = data['lastNameInitial'] ?? '';
-          final drinkString = data['preferredDrink'];
-          _selectedDrink = Drink.values.firstWhere(
-                (e) => e.toString() == drinkString,
-            orElse: () => Drink.beer,
-          );
+          _customDrinkController.text = customDrink;
+          currentUserCustomDrink = customDrink.isNotEmpty ? customDrink : null;
+          _selectedDrink = selectedDrink;
         });
       }
     } catch (e) {
@@ -133,11 +145,14 @@ class _ProfileEditorState extends State<ProfileEditor> {
     if (_formKey.currentState!.validate()) {
       try {
         final ref = _database.ref('users/${widget.user.uid}');
+        final customDrink = _customDrinkController.text.trim();
         await ref.update({
           'firstName': _firstNameController.text.trim(),
           'lastNameInitial': _lastNameInitialController.text.trim(),
           'preferredDrink': _selectedDrink.toString(),
+          'customDrink': customDrink,
         });
+        currentUserCustomDrink = customDrink.isNotEmpty ? customDrink : null;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(translations.profileUpdatedSuccess), backgroundColor: Colors.green),
@@ -290,10 +305,19 @@ class _ProfileEditorState extends State<ProfileEditor> {
             DropdownButtonFormField<Drink>(
               value: _selectedDrink,
               decoration: InputDecoration(labelText: translations.preferredDrinkLabel),
-              items: Drink.values.map((Drink drink) {
+              items: Drink.values
+                  .where((drink) => drink != Drink.custom || _customDrinkController.text.trim().isNotEmpty)
+                  .map((Drink drink) {
+                String displayText;
+                if (drink == Drink.custom) {
+                  final customName = _customDrinkController.text.trim();
+                  displayText = '${drink.drinkEmoji} $customName';
+                } else {
+                  displayText = '${drink.drinkEmoji} ${drink.displayName}';
+                }
                 return DropdownMenuItem<Drink>(
                   value: drink,
-                  child: Text('${drink.drinkEmoji} ${drink.displayName}'),
+                  child: Text(displayText),
                 );
               }).toList(),
               onChanged: (Drink? newValue) {
@@ -304,6 +328,26 @@ class _ProfileEditorState extends State<ProfileEditor> {
                 }
               },
               validator: (value) => value == null ? translations.preferredDrinkEmptyError : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _customDrinkController,
+              decoration: InputDecoration(
+                labelText: translations.customDrinkLabel,
+                helperText: translations.customDrinkHelper,
+                counterText: "",
+              ),
+              maxLength: 15,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s\.%]')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  if (_selectedDrink == Drink.custom && value.trim().isEmpty) {
+                    _selectedDrink = Drink.beer;
+                  }
+                });
+              },
             ),
             const SizedBox(height: 32),
             ElevatedButton(

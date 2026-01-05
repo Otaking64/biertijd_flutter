@@ -85,5 +85,8 @@
   "accountDeletedSuccess": "Account succesvol verwijderd.",
   "accountDeleteError": "Account verwijderen mislukt: {error}",
   "groupDoesNotExistError": "Deze groep bestaat niet.",
-  "shareUrlLabel": "Deel Groep"
+  "shareUrlLabel": "Deel Groep",
+  "drinkCustom": "Aangepast",
+  "customDrinkLabel": "Aangepaste Dranknaam",
+  "customDrinkHelper": "Alleen letters, cijfers, spaties, punten en %, max 15 tekens"
 }

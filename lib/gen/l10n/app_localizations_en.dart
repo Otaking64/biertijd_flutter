@@ -284,4 +284,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareUrlLabel => 'Share Group';
+
+  @override
+  String get drinkCustom => 'Custom';
+
+  @override
+  String get customDrinkLabel => 'Custom Drink Name';
+
+  @override
+  String get customDrinkHelper =>
+      'Letters, numbers, spaces, dots and % only, max 15 characters';
 }
