@@ -86,5 +86,7 @@
   "reauthenticateTitle": "Re-authentication Required",
   "reauthenticateInstruction": "For security reasons, please log in again before deleting your account.",
   "accountDeletedSuccess": "Account deleted successfully.",
-  "accountDeleteError": "Failed to delete account: {error}"
+  "accountDeleteError": "Failed to delete account: {error}",
+  "groupDoesNotExistError": "This group does not exist.",
+  "shareUrlLabel": "Share Group"
 }

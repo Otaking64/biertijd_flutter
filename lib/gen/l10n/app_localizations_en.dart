@@ -278,4 +278,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String accountDeleteError(Object error) {
     return 'Failed to delete account: $error';
   }
+
+  @override
+  String get groupDoesNotExistError => 'This group does not exist.';
+
+  @override
+  String get shareUrlLabel => 'Share Group';
 }

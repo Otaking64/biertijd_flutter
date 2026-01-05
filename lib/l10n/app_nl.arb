@@ -83,5 +83,7 @@
   "reauthenticateTitle": "Opnieuw inloggen vereist",
   "reauthenticateInstruction": "Om veiligheidsredenen moet u opnieuw inloggen voordat u uw account kunt verwijderen.",
   "accountDeletedSuccess": "Account succesvol verwijderd.",
-  "accountDeleteError": "Account verwijderen mislukt: {error}"
+  "accountDeleteError": "Account verwijderen mislukt: {error}",
+  "groupDoesNotExistError": "Deze groep bestaat niet.",
+  "shareUrlLabel": "Deel Groep"
 }

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'Account_Screen.dart';
 import 'main.dart'; // Import for translations
@@ -612,18 +613,38 @@ class _NameListScreenState extends State<NameListScreen> {
 
   void _showQrCodeDialog() {
     if (_activeGroupId == null) return;
+    final shareUrl = 'https://wiemoeterbiergaanhalen.nl/join=$_activeGroupId';
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          content: SizedBox(
-            width: 250,
-            height: 250,
-            child: QrImageView(
-              data: 'biertijdapp://group?id=$_activeGroupId',
-              version: QrVersions.auto,
-              size: 200.0,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 250,
+                height: 250,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: QrImageView(
+                  data: _activeGroupId!,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () async {
+                  await Share.share(shareUrl);
+                },
+                icon: const Icon(Icons.share),
+                label: Text(translations.shareUrlLabel),
+              ),
+            ],
           ),
         );
       },

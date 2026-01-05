@@ -601,6 +601,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to delete account: {error}'**
   String accountDeleteError(Object error);
+
+  /// No description provided for @groupDoesNotExistError.
+  ///
+  /// In en, this message translates to:
+  /// **'This group does not exist.'**
+  String get groupDoesNotExistError;
+
+  /// No description provided for @shareUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Group'**
+  String get shareUrlLabel;
 }
 
 class _AppLocalizationsDelegate

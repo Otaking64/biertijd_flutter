@@ -281,4 +281,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String accountDeleteError(Object error) {
     return 'Account verwijderen mislukt: $error';
   }
+
+  @override
+  String get groupDoesNotExistError => 'Deze groep bestaat niet.';
+
+  @override
+  String get shareUrlLabel => 'Deel Groep';
 }

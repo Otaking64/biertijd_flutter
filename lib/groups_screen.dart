@@ -62,13 +62,10 @@ class _GroupsScreenState extends State<GroupsScreen> {
     if (user == null || _groupNameController.text.trim().isEmpty) {
       return;
     }
-
     final DatabaseReference groupsRef = FirebaseDatabase.instance.ref('groups');
     final newGroupRef = groupsRef.push();
     final groupId = newGroupRef.key;
-
     if (groupId == null) return;
-
     await newGroupRef.set({
       'name': _groupNameController.text.trim(),
       'createdBy': user.uid,
@@ -77,12 +74,28 @@ class _GroupsScreenState extends State<GroupsScreen> {
       },
       'lastUpdated': ServerValue.timestamp,
     });
-
     final DatabaseReference userGroupsRef =
         FirebaseDatabase.instance.ref('users/${user.uid}/groups');
     await userGroupsRef.update({
       groupId: true,
     });
+    // Show join URL dialog
+    final joinUrl = 'bierapp://join?group=$groupId';
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Share Join URL'),
+          content: SelectableText(joinUrl),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Stream<DatabaseEvent> _getGroupsStream() {

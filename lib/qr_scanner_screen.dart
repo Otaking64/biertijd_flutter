@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:wie_moet_er_bier_gaan_halen/main.dart';
+import 'GroupJoiner.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -91,29 +92,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   }
 
   Future<void> _joinGroup(String groupId) async {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      _showError(translations.mustBeLoggedInToJoinGroupError);
-      return;
-    }
-
-    final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-    await dbRef.child('groups/$groupId/members/${currentUser.uid}').set(true);
-    await dbRef.child('users/${currentUser.uid}/groups/$groupId').set(true);
-
+    await GroupJoiner.joinGroup(context, groupId);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(translations.successfullyJoinedGroupMessage)),
-      );
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _showError(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
       Navigator.of(context).pop();
     }
   }

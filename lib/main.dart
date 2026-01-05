@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,9 @@ import 'package:wie_moet_er_bier_gaan_halen/registration_screen.dart';
 import 'gen/l10n/app_localizations.dart';
 import 'name_list_screen.dart';
 import 'firebase_options.dart';
+import 'package:app_links/app_links.dart';
+import 'GroupJoiner.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 AppLocalizations get translations => AppLocalizations.of(navigatorKey.currentContext!)!;
 
@@ -27,17 +31,62 @@ class AppEntry extends StatefulWidget {
 
 class _AppEntryState extends State<AppEntry> {
   late Future<String> _initialRouteFuture;
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
 
   @override
   void initState() {
     super.initState();
     _initialRouteFuture = _getInitialRoute();
+    _appLinks = AppLinks();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    // Handle links when app is already running
+    _linkSubscription = _appLinks.uriLinkStream.listen((Uri uri) async {
+      _handleDeepLink(uri);
+    });
+
+    // Handle initial link if app was opened via link
+    _appLinks.getInitialLink().then((Uri? uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    });
+  }
+
+  void _handleDeepLink(Uri uri) async {
+    if (uri.scheme == 'bierapp' && uri.host == 'join') {
+      final groupId = uri.queryParameters['group'];
+      if (groupId != null && groupId.isNotEmpty) {
+        await GroupJoiner.joinGroup(navigatorKey.currentContext!, groupId);
+      }
+    }
+    else if (uri.scheme == 'https' && uri.host == 'wiemoeterbiergaanhalen.nl' && uri.path.startsWith('/join')) {
+      String? groupId;
+      final joinPath = uri.path;
+      if (joinPath.startsWith('/join=')) {
+        groupId = joinPath.substring('/join='.length);
+      } else if (joinPath.startsWith('/join/')) {
+        groupId = joinPath.substring('/join/'.length);
+      }
+      if (groupId != null && groupId.isNotEmpty) {
+        await GroupJoiner.joinGroup(navigatorKey.currentContext!, groupId);
+      }
+    }
   }
 
   Future<String> _getInitialRoute() async {
     final prefs = await SharedPreferences.getInstance();
     final hasSeenAuthScreen = prefs.getBool('hasSeenAuthScreen') ?? false;
     return hasSeenAuthScreen ? '/home' : '/auth';
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
   }
 
   @override

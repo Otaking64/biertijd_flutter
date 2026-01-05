@@ -47,5 +47,18 @@
 	<true/>
     <key>NSCameraUsageDescription</key>
     <string>This app needs access to the camera to scan group QR codes.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bierapp</string>
+			</array>
+		</dict>
+	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:wiemoeterbiergaanhalen.nl</string>
+	</array>
 </dict>
 </plist>
